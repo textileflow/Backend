@@ -4,6 +4,9 @@ const helmet = require("helmet");
 const morgan = require("morgan");
 
 const authRoutes = require("./routes/Auth/auth");
+const categoryRoutes = require("./routes/Category/category");
+const subCategoryRoutes = require("./routes/SubCategory/subCategory");
+const traderRoutes = require("./routes/Trader/trader");
 const {
   notFoundHandler,
   errorHandler,
@@ -30,13 +33,16 @@ if (process.env.NODE_ENV !== "test") {
 app.get("/api/health", (req, res) => {
   res.status(200).json({
     success: true,
-    message: "Embroidery ERP Authentication API is running smoothly",
+    message: "Embroidery ERP API is running smoothly",
     timestamp: new Date().toISOString(),
   });
 });
 
-// 6. Mount Auth Routes
+// 6. Mount Module Routes
 app.use("/api/auth", authRoutes);
+app.use("/api/categories", categoryRoutes);
+app.use("/api/subcategories", subCategoryRoutes);
+app.use("/api/traders", traderRoutes);
 
 // 7. Handle 404 routes
 app.use(notFoundHandler);

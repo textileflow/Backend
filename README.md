@@ -1,17 +1,15 @@
-# Embroidery ERP - Authentication API
+# Embroidery ERP - Backend API
 
-Production-ready Authentication Microservice / API foundation for the Embroidery ERP Software. Built with Node.js, Express.js, MongoDB, Mongoose, JWT, and bcrypt.
+Production-ready Backend API microservice architecture for Embroidery ERP Software. Built with Node.js, Express.js, MongoDB, Mongoose, JWT, and bcrypt.
 
 ---
 
-## 📋 Features
+## 📋 Implemented Modules
 
-- **User Management**: Registration, Authentication, & Profile retrieval.
-- **Security**: Password hashing with `bcryptjs`, JWT token authorization, `helmet` header security, `cors` cross-origin sharing, and request payload size limits.
-- **Validation**: Strict request payload validation powered by `express-validator`.
-- **Role-Based Access Control (RBAC)**: Extensible role middleware supporting `admin`, `manager`, and `staff` roles for future ERP module authorization.
-- **Centralized Error Handling**: Standardized JSON response format for operational errors, validation errors, and DB exceptions.
-- **Automated Testing**: 100% route coverage via Jest, Supertest, and MongoMemoryServer.
+1. **Authentication API**: User registration with numeric auto-incrementing IDs, login, profile retrieval by ID, JWT authorization, protected logout, role-based access control (`admin`, `manager`, `staff`).
+2. **Category Master Module**: Full CRUD for product categories with unique constraint and deletion protection.
+3. **Sub Category Master Module**: Full CRUD for sub-categories referenced to Categories with compound uniqueness (`categoryId` + `name`) and deletion protection.
+4. **Trader / Job Work Customer Module**: Master data module for job work customers with file upload reference support, category-subcategory relationship validation, search & filtering.
 
 ---
 
@@ -20,10 +18,16 @@ Production-ready Authentication Microservice / API foundation for the Embroidery
 ```
 src/
 ├── config/
-│   └── db.js                    # Database connection
+│   └── db.js                    # Database connection setup
 ├── controllers/
-│   └── Auth/
-│       └── auth.js              # Auth controller handlers
+│   ├── Auth/
+│   │   └── auth.js              # Auth controller handlers
+│   ├── Category/
+│   │   └── category.js          # Category controller handlers
+│   ├── SubCategory/
+│   │   └── subCategory.js       # SubCategory controller handlers
+│   └── Trader/
+│       └── trader.js            # Trader controller handlers
 ├── middleware/
 │   ├── Auth/
 │   │   └── auth.js              # Auth & Role middleware guards
@@ -31,262 +35,106 @@ src/
 │       ├── error.js             # 404 & Centralized error handler
 │       └── validate.js          # Request validation error handler
 ├── models/
-│   └── Auth/
-│       └── auth.js              # User Mongoose model
+│   ├── Auth/
+│   │   └── auth.js              # User Mongoose model (Numeric custom userId)
+│   ├── Category/
+│   │   └── category.js          # Category Mongoose model
+│   ├── SubCategory/
+│   │   └── subCategory.js       # SubCategory Mongoose model
+│   └── Trader/
+│       └── trader.js            # Trader Mongoose model
 ├── routes/
-│   └── Auth/
-│       └── auth.js              # Auth routes (/api/auth)
+│   ├── Auth/
+│   │   └── auth.js              # Auth routes (/api/auth)
+│   ├── Category/
+│   │   └── category.js          # Category routes (/api/categories)
+│   ├── SubCategory/
+│   │   └── subCategory.js       # SubCategory routes (/api/subcategories)
+│   └── Trader/
+│       └── trader.js            # Trader routes (/api/traders)
 ├── services/
-│   └── Auth/
-│       └── auth.js              # Auth service logic
+│   ├── Auth/
+│   │   └── auth.js              # Auth business logic service
+│   ├── Category/
+│   │   └── category.js          # Category business logic service
+│   ├── SubCategory/
+│   │   └── subCategory.js       # SubCategory business logic service
+│   └── Trader/
+│       └── trader.js            # Trader business logic service
 ├── utils/
 │   ├── Auth/
 │   │   ├── generateToken.js     # JWT token generator
-│   │   └── validators.js        # Auth express-validator schemas
+│   │   └── validators.js        # Auth validators
+│   ├── Category/
+│   │   └── validators.js        # Category validators
+│   ├── SubCategory/
+│   │   └── validators.js        # SubCategory validators
+│   ├── Trader/
+│   │   └── validators.js        # Trader validators
 │   └── Common/
-│       ├── apiResponse.js       # Success response utility
-│       └── customError.js       # Custom error class
+│       ├── apiResponse.js       # Success response helper
+│       └── customError.js       # Custom operational error class
 ├── app.js                       # Express app configuration
 └── server.js                    # Server startup script
 tests/
-└── auth.test.js                 # Automated API test suite
-```
-
----
-
-## ⚙️ Environment Variables Setup
-
-1. Copy the example environment file `.env.example` to create `.env`:
-   ```bash
-   cp .env.example .env
-   ```
-
-2. Configure the environment variables inside `.env`:
-   ```env
-   PORT=5000
-   MONGODB_URI=mongodb://127.0.0.1:27017/embroidery_erp
-   JWT_SECRET=super_secret_jwt_key_for_embroidery_erp_2026
-   JWT_EXPIRES_IN=7d
-   NODE_ENV=development
-   ```
-
----
-
-## 🛢️ MongoDB Setup
-
-- Ensure MongoDB is installed locally and running on default port `27017` OR obtain a cloud MongoDB connection string (MongoDB Atlas).
-- Update `MONGODB_URI` in `.env` accordingly.
-
----
-
-## 🚀 Installation & Running
-
-### 1. Install Dependencies
-```bash
-npm install
-```
-
-### 2. Start Development Server
-```bash
-npm run dev
-```
-
-### 3. Start Production Server
-```bash
-npm start
-```
-
-### 4. Run Automated Test Suite
-```bash
-npm test
+├── auth.test.js                 # Auth integration tests (13 tests)
+├── category.test.js             # Category integration tests (6 tests)
+├── subCategory.test.js          # SubCategory integration tests (6 tests)
+└── trader.test.js               # Trader integration tests (6 tests)
 ```
 
 ---
 
 ## 🔌 API Endpoints Summary
 
+### Authentication APIs (`/api/auth`)
 | Method | Endpoint             | Access    | Description                                      |
 | :----- | :------------------- | :-------- | :----------------------------------------------- |
-| `GET`  | `/api/health`        | Public    | Health check endpoint                            |
-| `POST` | `/api/auth/register` | Public    | Register a new user and receive JWT token        |
-| `POST` | `/api/auth/login`    | Public    | Authenticate user credentials and receive JWT    |
-| `GET`  | `/api/auth/me`       | Protected | Retrieve authenticated user profile              |
-| `POST` | `/api/auth/logout`   | Public    | Logout response endpoint                         |
+| `POST` | `/api/auth/register` | Public    | Register user with numeric ID & JWT token        |
+| `POST` | `/api/auth/login`    | Public    | Login user & return JWT token                    |
+| `GET`  | `/api/auth/profile`  | Protected | Retrieve logged-in user profile                  |
+| `GET`  | `/api/auth/profile/:id`| Protected| Retrieve user profile by numeric ID              |
+| `POST` | `/api/auth/logout`   | Protected | Invalidate/logout active token session           |
+
+### Category APIs (`/api/categories`)
+| Method   | Endpoint               | Access                   | Description                                     |
+| :------- | :--------------------- | :----------------------- | :---------------------------------------------- |
+| `POST`   | `/api/categories`      | Admin, Manager           | Create a new category                           |
+| `GET`    | `/api/categories`      | Admin, Manager, Staff    | Get all categories                              |
+| `GET`    | `/api/categories/:id`  | Admin, Manager, Staff    | Get single category by ID                       |
+| `PUT`    | `/api/categories/:id`  | Admin, Manager           | Update category                                 |
+| `DELETE` | `/api/categories/:id`  | Admin, Manager           | Delete category (protected against in-use items)|
+
+### Sub Category APIs (`/api/subcategories`)
+| Method   | Endpoint                             | Access                | Description                                        |
+| :------- | :----------------------------------- | :-------------------- | :------------------------------------------------- |
+| `POST`   | `/api/subcategories`                 | Admin, Manager        | Create a new sub-category                          |
+| `GET`    | `/api/subcategories`                 | Admin, Manager, Staff | Get all sub-categories                             |
+| `GET`    | `/api/subcategories/:id`             | Admin, Manager, Staff | Get single sub-category                            |
+| `GET`    | `/api/subcategories/category/:catId` | Admin, Manager, Staff | Get all sub-categories for a specific category     |
+| `PUT`    | `/api/subcategories/:id`             | Admin, Manager        | Update sub-category                                |
+| `DELETE` | `/api/subcategories/:id`             | Admin, Manager        | Delete sub-category (protected against in-use items)|
+
+### Trader / Job Work Customer APIs (`/api/traders`)
+| Method   | Endpoint            | Access                | Description                                        |
+| :------- | :------------------ | :-------------------- | :------------------------------------------------- |
+| `POST`   | `/api/traders`      | Admin, Manager        | Create a new trader/customer                       |
+| `GET`    | `/api/traders`      | Admin, Manager, Staff | Get all traders (support search, categoryId filter)|
+| `GET`    | `/api/traders/:id`  | Admin, Manager, Staff | Get single trader by ID                            |
+| `PUT`    | `/api/traders/:id`  | Admin, Manager        | Update trader                                      |
+| `DELETE` | `/api/traders/:id`  | Admin, Manager        | Delete trader                                      |
 
 ---
 
-## 🔑 How to Send Authorization Token
+## 🔗 Category → Sub Category → Trader Relationship Model
 
-For protected endpoints (`/api/auth/me`), include the JWT token returned upon registration or login in the `Authorization` HTTP header:
-
-```http
-Authorization: Bearer <your_jwt_token_here>
+```mermaid
+graph TD
+    A["Category (e.g. Garment Trader)"] -->|"1 to Many"| B["Sub Category (e.g. Ladies Wear)"]
+    B -->|"1 to Many"| C["Trader / Job Work Customer (e.g. ABC Garments)"]
 ```
 
----
-
-## 📝 Example Requests & Responses
-
-### 1. Register User (`POST /api/auth/register`)
-
-**Request Body:**
-```json
-{
-  "name": "Jane Doe",
-  "email": "jane@embroideryerp.com",
-  "password": "securepassword123",
-  "role": "manager"
-}
-```
-
-**Success Response (`201 Created`):**
-```json
-{
-  "success": true,
-  "message": "User registered successfully",
-  "data": {
-    "id": 1,
-    "name": "Jane Doe",
-    "email": "jane@embroideryerp.com",
-    "role": "manager",
-    "isActive": true,
-    "createdAt": "2026-09-10T06:30:00.000Z",
-    "updatedAt": "2026-09-10T06:30:00.000Z",
-    "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
-  }
-}
-```
-
-**Error Response (`400 Bad Request` - Duplicate Email):**
-```json
-{
-  "success": false,
-  "message": "Email address is already registered"
-}
-```
-
----
-
-### 2. Login User (`POST /api/auth/login`)
-
-**Request Body:**
-```json
-{
-  "email": "jane@embroideryerp.com",
-  "password": "securepassword123"
-}
-```
-
-**Success Response (`200 OK`):**
-```json
-{
-  "success": true,
-  "message": "Login successful",
-  "data": {
-    "id": 1,
-    "name": "Jane Doe",
-    "email": "jane@embroideryerp.com",
-    "role": "manager",
-    "isActive": true,
-    "createdAt": "2026-09-10T06:30:00.000Z",
-    "updatedAt": "2026-09-10T06:30:00.000Z",
-    "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
-  }
-}
-```
-
-**Error Response (`401 Unauthorized` - Wrong Password):**
-```json
-{
-  "success": false,
-  "message": "Invalid email or password"
-}
-```
-
----
-
-### 3. Get User Profile by ID (`GET /api/auth/profile/:id` or `GET /api/auth/profile`)
-
-**Request Headers:**
-```http
-Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
-```
-
-**URL Example:**
-- `GET http://localhost:5000/api/auth/profile/1`
-- `GET http://localhost:5000/api/auth/profile`
-
-**Success Response (`200 OK`):**
-```json
-{
-  "success": true,
-  "message": "User profile retrieved successfully",
-  "data": {
-    "id": 1,
-    "name": "Jane Doe",
-    "email": "jane@embroideryerp.com",
-    "role": "manager",
-    "isActive": true,
-    "createdAt": "2026-09-10T06:30:00.000Z",
-    "updatedAt": "2026-09-10T06:30:00.000Z"
-  }
-}
-```
-
-**Error Response (`404 Not Found` - User ID non-existent):**
-```json
-{
-  "success": false,
-  "message": "User not found"
-}
-```
-
-**Error Response (`401 Unauthorized` - Missing Token):**
-```json
-{
-  "success": false,
-  "message": "Access denied. Authorization token required."
-}
-```
-
----
-
-### 4. Logout User (`POST /api/auth/logout`)
-
-**Request Headers:**
-```http
-Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
-```
-
-**Success Response (`200 OK`):**
-```json
-{
-  "success": true,
-  "message": "Logged out successfully"
-}
-```
-
-**Error Response (`401 Unauthorized` - Token missing/invalid):**
-```json
-{
-  "success": false,
-  "message": "Access denied. Authorization token required."
-}
-```
-
----
-
-## 🛡️ Role-Based Access Control Example
-
-The `authorizeRoles` middleware can be used to protect future ERP routes:
-
-```javascript
-const authorizeRoles = require('../middleware/roleMiddleware');
-const protect = require('../middleware/authMiddleware');
-
-// Only admin can access
-router.get('/admin/dashboard', protect, authorizeRoles('admin'), controller.adminOnly);
-
-// Admin and manager can access
-router.get('/production/summary', protect, authorizeRoles('admin', 'manager'), controller.prodSummary);
-```
+1. **Category**: High-level business classification (e.g., *Garment Trader*, *Saree Manufacturer*).
+2. **Sub Category**: Belongs to 1 specific Category (e.g., *Ladies Wear*, *Kids Wear*).
+3. **Trader (Job Work Customer)**: Must reference both a **Category** and a **Sub Category**.
+   - **Enforced Business Rule**: The selected `subCategoryId` MUST belong to the selected `categoryId`. If mismatched, the request is rejected with `400 Bad Request`.
