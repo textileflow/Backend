@@ -24,12 +24,30 @@ app.use(cors());
 app.use(express.json({ limit: "10kb" }));
 app.use(express.urlencoded({ extended: true, limit: "10kb" }));
 
+const connectDB = require("./config/db");
+
 // 4. Request logging (skip during tests)
 if (process.env.NODE_ENV !== "test") {
   app.use(morgan("dev"));
 }
 
-// 5. Health check endpoint
+// 5. Database connection middleware for Serverless (Vercel)
+app.use(async (req, res, next) => {
+  if (req.path === "/api/health" || process.env.NODE_ENV === "test") {
+    return next();
+  }
+  try {
+    await connectDB();
+    next();
+  } catch (error) {
+    return res.status(500).json({
+      success: false,
+      message: `Database Connection Error: ${error.message}`,
+    });
+  }
+});
+
+// 6. Health check endpoint
 app.get("/api/health", (req, res) => {
   res.status(200).json({
     success: true,
@@ -38,7 +56,7 @@ app.get("/api/health", (req, res) => {
   });
 });
 
-// 6. Mount Module Routes
+// 7. Mount Module Routes
 app.use("/api/auth", authRoutes);
 app.use("/api/categories", categoryRoutes);
 app.use("/api/subcategories", subCategoryRoutes);
