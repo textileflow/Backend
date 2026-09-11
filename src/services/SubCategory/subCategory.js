@@ -3,20 +3,43 @@ const Category = require("../../models/Category/category");
 const Merchant = require("../../models/Merchant/merchant");
 const CustomError = require("../../utils/Common/customError");
 
+/**
+ * Format subCategory object safely with populated Category details
+ */
+const formatSubCategory = async (subCategory) => {
+  if (!subCategory) return {};
+  const obj = typeof subCategory.toJSON === "function" ? subCategory.toJSON() : { ...subCategory };
+  
+  const category = await Category.findOne({ categoryId: obj.categoryId });
+  if (category) {
+    obj.category = {
+      id: category.categoryId,
+      name: category.name,
+    };
+  }
+  delete obj.categoryId;
+  return obj;
+};
+
 class SubCategoryService {
   /**
    * Create a new SubCategory
    */
   async createSubCategory({ categoryId, name, note }) {
+    const numCategoryId = Number(categoryId);
+    if (isNaN(numCategoryId)) {
+      throw new CustomError("Invalid Category ID", 400);
+    }
+
     // Check if category exists
-    const category = await Category.findById(categoryId);
+    const category = await Category.findOne({ categoryId: numCategoryId });
     if (!category) {
       throw new CustomError("Category not found", 404);
     }
 
     // Check duplicate name under the same category
     const existing = await SubCategory.findOne({
-      categoryId,
+      categoryId: numCategoryId,
       name: { $regex: new RegExp(`^${name.trim()}$`, "i") },
     });
     if (existing) {
@@ -27,64 +50,74 @@ class SubCategoryService {
     }
 
     const subCategory = await SubCategory.create({
-      categoryId,
+      categoryId: numCategoryId,
       name: name.trim(),
       note: note ? note.trim() : "",
     });
 
-    return await subCategory.populate("categoryId", "name note");
+    return await formatSubCategory(subCategory);
   }
 
   /**
    * Get all SubCategories
    */
   async getAllSubCategories() {
-    return await SubCategory.find()
-      .populate("categoryId", "name note")
-      .sort({ createdAt: -1 });
+    const subCategories = await SubCategory.find().sort({ subCategoryId: 1 });
+    return await Promise.all(subCategories.map((s) => formatSubCategory(s)));
   }
 
   /**
-   * Get single SubCategory by ID
+   * Get single SubCategory by numeric ID
    */
   async getSubCategoryById(id) {
-    const subCategory = await SubCategory.findById(id).populate(
-      "categoryId",
-      "name note"
-    );
+    const numericId = Number(id);
+    if (isNaN(numericId)) {
+      throw new CustomError("Invalid Sub Category ID", 400);
+    }
+
+    const subCategory = await SubCategory.findOne({ subCategoryId: numericId });
     if (!subCategory) {
       throw new CustomError("Sub Category not found", 404);
     }
-    return subCategory;
+    return await formatSubCategory(subCategory);
   }
 
   /**
-   * Get SubCategories by Category ID
+   * Get SubCategories by Category numeric ID
    */
   async getSubCategoriesByCategoryId(categoryId) {
-    const category = await Category.findById(categoryId);
+    const numCategoryId = Number(categoryId);
+    if (isNaN(numCategoryId)) {
+      throw new CustomError("Invalid Category ID", 400);
+    }
+
+    const category = await Category.findOne({ categoryId: numCategoryId });
     if (!category) {
       throw new CustomError("Category not found", 404);
     }
 
-    return await SubCategory.find({ categoryId })
-      .populate("categoryId", "name note")
-      .sort({ createdAt: -1 });
+    const subCategories = await SubCategory.find({ categoryId: numCategoryId }).sort({ subCategoryId: 1 });
+    return await Promise.all(subCategories.map((s) => formatSubCategory(s)));
   }
 
   /**
-   * Update SubCategory by ID
+   * Update SubCategory by numeric ID
    */
   async updateSubCategory(id, { categoryId, name, note }) {
-    const subCategory = await SubCategory.findById(id);
+    const numericId = Number(id);
+    if (isNaN(numericId)) {
+      throw new CustomError("Invalid Sub Category ID", 400);
+    }
+
+    const subCategory = await SubCategory.findOne({ subCategoryId: numericId });
     if (!subCategory) {
       throw new CustomError("Sub Category not found", 404);
     }
 
-    const targetCategoryId = categoryId || subCategory.categoryId;
+    const targetCategoryId = categoryId ? Number(categoryId) : subCategory.categoryId;
 
     if (categoryId) {
-      const category = await Category.findById(categoryId);
+      const category = await Category.findOne({ categoryId: targetCategoryId });
       if (!category) {
         throw new CustomError("Category not found", 404);
       }
@@ -95,10 +128,10 @@ class SubCategoryService {
     // If category or name changed, check duplicate
     if (
       (name && name.trim().toLowerCase() !== subCategory.name.toLowerCase()) ||
-      (categoryId && categoryId.toString() !== subCategory.categoryId.toString())
+      (categoryId && Number(categoryId) !== subCategory.categoryId)
     ) {
       const existing = await SubCategory.findOne({
-        _id: { $ne: id },
+        subCategoryId: { $ne: numericId },
         categoryId: targetCategoryId,
         name: { $regex: new RegExp(`^${newName}$`, "i") },
       });
@@ -110,25 +143,30 @@ class SubCategoryService {
       }
     }
 
-    if (categoryId) subCategory.categoryId = categoryId;
+    if (categoryId) subCategory.categoryId = targetCategoryId;
     if (name) subCategory.name = newName;
     if (note !== undefined) subCategory.note = note ? note.trim() : "";
 
     await subCategory.save();
-    return await subCategory.populate("categoryId", "name note");
+    return await formatSubCategory(subCategory);
   }
 
   /**
-   * Delete SubCategory by ID (Prevent deletion if used by Merchant)
+   * Delete SubCategory by numeric ID (Prevent deletion if used by Merchant)
    */
   async deleteSubCategory(id) {
-    const subCategory = await SubCategory.findById(id);
+    const numericId = Number(id);
+    if (isNaN(numericId)) {
+      throw new CustomError("Invalid Sub Category ID", 400);
+    }
+
+    const subCategory = await SubCategory.findOne({ subCategoryId: numericId });
     if (!subCategory) {
       throw new CustomError("Sub Category not found", 404);
     }
 
     // Check if subCategory is used by any Merchant
-    const merchantCount = await Merchant.countDocuments({ subCategoryId: id });
+    const merchantCount = await Merchant.countDocuments({ subCategoryId: numericId });
     if (merchantCount > 0) {
       throw new CustomError(
         "Cannot delete sub-category as it is currently associated with merchants",
@@ -136,8 +174,8 @@ class SubCategoryService {
       );
     }
 
-    await SubCategory.findByIdAndDelete(id);
-    return { id };
+    await SubCategory.findOneAndDelete({ subCategoryId: numericId });
+    return { id: numericId };
   }
 }
 

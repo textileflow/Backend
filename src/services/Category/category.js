@@ -27,14 +27,19 @@ class CategoryService {
    * Get all Categories
    */
   async getAllCategories() {
-    return await Category.find().sort({ createdAt: -1 });
+    return await Category.find().sort({ categoryId: 1 });
   }
 
   /**
-   * Get single Category by ID
+   * Get single Category by numeric ID
    */
   async getCategoryById(id) {
-    const category = await Category.findById(id);
+    const numericId = Number(id);
+    if (isNaN(numericId)) {
+      throw new CustomError("Invalid Category ID", 400);
+    }
+
+    const category = await Category.findOne({ categoryId: numericId });
     if (!category) {
       throw new CustomError("Category not found", 404);
     }
@@ -42,17 +47,22 @@ class CategoryService {
   }
 
   /**
-   * Update Category by ID
+   * Update Category by numeric ID
    */
   async updateCategory(id, { name, note }) {
-    const category = await Category.findById(id);
+    const numericId = Number(id);
+    if (isNaN(numericId)) {
+      throw new CustomError("Invalid Category ID", 400);
+    }
+
+    const category = await Category.findOne({ categoryId: numericId });
     if (!category) {
       throw new CustomError("Category not found", 404);
     }
 
     if (name && name.trim().toLowerCase() !== category.name.toLowerCase()) {
       const existing = await Category.findOne({
-        _id: { $ne: id },
+        categoryId: { $ne: numericId },
         name: { $regex: new RegExp(`^${name.trim()}$`, "i") },
       });
       if (existing) {
@@ -70,16 +80,21 @@ class CategoryService {
   }
 
   /**
-   * Delete Category by ID (Prevent deletion if in use)
+   * Delete Category by numeric ID (Prevent deletion if in use)
    */
   async deleteCategory(id) {
-    const category = await Category.findById(id);
+    const numericId = Number(id);
+    if (isNaN(numericId)) {
+      throw new CustomError("Invalid Category ID", 400);
+    }
+
+    const category = await Category.findOne({ categoryId: numericId });
     if (!category) {
       throw new CustomError("Category not found", 404);
     }
 
     // Check if category is used by any SubCategory
-    const subCategoryCount = await SubCategory.countDocuments({ categoryId: id });
+    const subCategoryCount = await SubCategory.countDocuments({ categoryId: numericId });
     if (subCategoryCount > 0) {
       throw new CustomError(
         "Cannot delete category as it is currently associated with sub-categories",
@@ -88,7 +103,7 @@ class CategoryService {
     }
 
     // Check if category is used by any Merchant
-    const merchantCount = await Merchant.countDocuments({ categoryId: id });
+    const merchantCount = await Merchant.countDocuments({ categoryId: numericId });
     if (merchantCount > 0) {
       throw new CustomError(
         "Cannot delete category as it is currently associated with merchants",
@@ -96,8 +111,8 @@ class CategoryService {
       );
     }
 
-    await Category.findByIdAndDelete(id);
-    return { id };
+    await Category.findOneAndDelete({ categoryId: numericId });
+    return { id: numericId };
   }
 }
 

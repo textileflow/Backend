@@ -44,13 +44,13 @@ beforeEach(async () => {
   adminToken = adminRes.body.data.token;
 
   const cat = await Category.create({ name: "Garment Merchant" });
-  categoryId = cat._id.toString();
+  categoryId = cat.categoryId;
 
   const subCat = await SubCategory.create({
-    categoryId: cat._id,
+    categoryId: cat.categoryId,
     name: "Ladies Wear",
   });
-  subCategoryId = subCat._id.toString();
+  subCategoryId = subCat.subCategoryId;
 });
 
 describe("Merchant Module API Tests (/api/merchants)", () => {
@@ -80,27 +80,30 @@ describe("Merchant Module API Tests (/api/merchants)", () => {
       expect(res.statusCode).toEqual(201);
       expect(res.body.success).toBe(true);
       expect(res.body.message).toBe("Merchant created successfully");
+      expect(res.body.data).toHaveProperty("id");
       expect(res.body.data.companyName).toBe("ABC Garments");
-      expect(res.body.data.category.name).toBe("Garment Merchant");
-      expect(res.body.data.subCategory.name).toBe("Ladies Wear");
+      expect(res.body.data.category.id).toBe(categoryId);
+      expect(res.body.data.subCategory.id).toBe(subCategoryId);
+      expect(res.body.data._id).toBeUndefined();
+      expect(res.body.data.__v).toBeUndefined();
     });
 
     it("should REJECT merchant creation if subCategoryId belongs to a DIFFERENT categoryId", async () => {
       // Create second category and second subcategory under cat2
       const cat2 = await Category.create({ name: "Home Textile" });
       const subCat2 = await SubCategory.create({
-        categoryId: cat2._id,
+        categoryId: cat2.categoryId,
         name: "Curtains",
       });
 
-      // Mismatch: Sending categoryId (Garment Merchant) with subCat2._id (Curtains)
+      // Mismatch: Sending categoryId (Garment Merchant) with subCat2.subCategoryId (Curtains)
       const res = await request(app)
         .post("/api/merchants")
         .set("Authorization", `Bearer ${adminToken}`)
         .send({
           ...sampleMerchant,
           categoryId, // Garment Merchant
-          subCategoryId: subCat2._id.toString(), // Curtains (under Home Textile)
+          subCategoryId: subCat2.subCategoryId, // Curtains (under Home Textile)
         });
 
       expect(res.statusCode).toEqual(400);
@@ -148,6 +151,7 @@ describe("Merchant Module API Tests (/api/merchants)", () => {
       expect(res.body.data.length).toBe(2);
       expect(res.body.data[0]).toHaveProperty("category");
       expect(res.body.data[0]).toHaveProperty("subCategory");
+      expect(res.body.data[0]._id).toBeUndefined();
     });
 
     it("should filter merchants using search query parameter", async () => {

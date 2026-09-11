@@ -4,8 +4,8 @@ const subCategoryValidator = [
   body("categoryId")
     .notEmpty()
     .withMessage("Category ID is required")
-    .isMongoId()
-    .withMessage("Invalid Category ID format"),
+    .isNumeric()
+    .withMessage("Category ID must be a number"),
 
   body("name")
     .trim()

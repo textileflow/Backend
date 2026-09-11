@@ -43,7 +43,7 @@ beforeEach(async () => {
   adminToken = adminRes.body.data.token;
 
   const cat = await Category.create({ name: "Garment Trader" });
-  categoryId = cat._id.toString();
+  categoryId = cat.categoryId;
 });
 
 describe("SubCategory Module API Tests (/api/subcategories)", () => {
@@ -60,8 +60,11 @@ describe("SubCategory Module API Tests (/api/subcategories)", () => {
 
       expect(res.statusCode).toEqual(201);
       expect(res.body.success).toBe(true);
+      expect(res.body.data).toHaveProperty("id");
       expect(res.body.data.name).toBe("Ladies Wear");
-      expect(res.body.data.categoryId).toHaveProperty("_id", categoryId);
+      expect(res.body.data.category).toHaveProperty("id", categoryId);
+      expect(res.body.data._id).toBeUndefined();
+      expect(res.body.data.__v).toBeUndefined();
     });
 
     it("should reject duplicate sub-category name under same category", async () => {
@@ -81,13 +84,11 @@ describe("SubCategory Module API Tests (/api/subcategories)", () => {
     });
 
     it("should reject sub-category creation for non-existent category ID", async () => {
-      const fakeCatId = new mongoose.Types.ObjectId().toString();
-
       const res = await request(app)
         .post("/api/subcategories")
         .set("Authorization", `Bearer ${adminToken}`)
         .send({
-          categoryId: fakeCatId,
+          categoryId: 9999,
           name: "Mens Wear",
         });
 
@@ -102,7 +103,7 @@ describe("SubCategory Module API Tests (/api/subcategories)", () => {
       await SubCategory.create({ categoryId, name: "Kids Wear" });
 
       const cat2 = await Category.create({ name: "Home Textile" });
-      await SubCategory.create({ categoryId: cat2._id, name: "Curtains" });
+      await SubCategory.create({ categoryId: cat2.categoryId, name: "Curtains" });
 
       const res = await request(app)
         .get(`/api/subcategories/category/${categoryId}`)
@@ -111,6 +112,7 @@ describe("SubCategory Module API Tests (/api/subcategories)", () => {
       expect(res.statusCode).toEqual(200);
       expect(res.body.success).toBe(true);
       expect(res.body.data.length).toBe(2);
+      expect(res.body.data[0]._id).toBeUndefined();
     });
   });
 
@@ -119,7 +121,7 @@ describe("SubCategory Module API Tests (/api/subcategories)", () => {
       const subCat = await SubCategory.create({ categoryId, name: "Unused Sub" });
 
       const res = await request(app)
-        .delete(`/api/subcategories/${subCat._id}`)
+        .delete(`/api/subcategories/${subCat.subCategoryId}`)
         .set("Authorization", `Bearer ${adminToken}`);
 
       expect(res.statusCode).toEqual(200);
@@ -134,11 +136,11 @@ describe("SubCategory Module API Tests (/api/subcategories)", () => {
         personName: "John",
         mobile: "9999999999",
         categoryId,
-        subCategoryId: subCat._id,
+        subCategoryId: subCat.subCategoryId,
       });
 
       const res = await request(app)
-        .delete(`/api/subcategories/${subCat._id}`)
+        .delete(`/api/subcategories/${subCat.subCategoryId}`)
         .set("Authorization", `Bearer ${adminToken}`);
 
       expect(res.statusCode).toEqual(400);

@@ -2,14 +2,6 @@ const merchantService = require("../../services/Merchant/merchant");
 const { sendSuccess } = require("../../utils/Common/apiResponse");
 
 /**
- * Format merchant instance safely into JSON object
- */
-const formatMerchant = (merchant) => {
-  if (!merchant) return {};
-  return typeof merchant.toJSON === "function" ? merchant.toJSON() : merchant;
-};
-
-/**
  * @desc    Create a new merchant
  * @route   POST /api/merchants
  * @access  Private (ADMIN, MANAGER)
@@ -21,7 +13,7 @@ const create = async (req, res, next) => {
       res,
       201,
       "Merchant created successfully",
-      formatMerchant(merchant)
+      merchant
     );
   } catch (error) {
     next(error);
@@ -41,12 +33,11 @@ const getAll = async (req, res, next) => {
       subCategoryId,
       search,
     });
-    const formattedMerchants = merchants.map((m) => formatMerchant(m));
     return sendSuccess(
       res,
       200,
       "Merchants fetched successfully",
-      formattedMerchants
+      merchants
     );
   } catch (error) {
     next(error);
@@ -65,7 +56,7 @@ const getById = async (req, res, next) => {
       res,
       200,
       "Merchant fetched successfully",
-      formatMerchant(merchant)
+      merchant
     );
   } catch (error) {
     next(error);
@@ -84,7 +75,7 @@ const update = async (req, res, next) => {
       res,
       200,
       "Merchant updated successfully",
-      formatMerchant(merchant)
+      merchant
     );
   } catch (error) {
     next(error);

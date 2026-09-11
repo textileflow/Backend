@@ -32,14 +32,14 @@ const merchantValidator = [
   body("categoryId")
     .notEmpty()
     .withMessage("Category ID is required")
-    .isMongoId()
-    .withMessage("Invalid Category ID format"),
+    .isNumeric()
+    .withMessage("Category ID must be a number"),
 
   body("subCategoryId")
     .notEmpty()
     .withMessage("Sub Category ID is required")
-    .isMongoId()
-    .withMessage("Invalid Sub Category ID format"),
+    .isNumeric()
+    .withMessage("Sub Category ID must be a number"),
 
   body("address").optional().trim(),
   body("paymentTerm").optional().trim(),

@@ -66,8 +66,11 @@ describe("Category Module API Tests (/api/categories)", () => {
 
       expect(res.statusCode).toEqual(201);
       expect(res.body.success).toBe(true);
+      expect(res.body.data).toHaveProperty("id");
       expect(res.body.data.name).toBe("Garment Trader");
       expect(res.body.data.note).toBe("Garment related traders");
+      expect(res.body.data._id).toBeUndefined();
+      expect(res.body.data.__v).toBeUndefined();
     });
 
     it("should reject creation by Staff (Forbidden 403)", async () => {
@@ -106,7 +109,7 @@ describe("Category Module API Tests (/api/categories)", () => {
         name: "Textile Trader",
         note: "Textile items",
       });
-      catId = cat._id.toString();
+      catId = cat.categoryId;
     });
 
     it("should fetch all categories for Staff user", async () => {
@@ -118,22 +121,22 @@ describe("Category Module API Tests (/api/categories)", () => {
       expect(res.body.success).toBe(true);
       expect(res.body.data.length).toBe(1);
       expect(res.body.data[0].name).toBe("Textile Trader");
+      expect(res.body.data[0]._id).toBeUndefined();
     });
 
-    it("should fetch single category by ID", async () => {
+    it("should fetch single category by numeric ID", async () => {
       const res = await request(app)
         .get(`/api/categories/${catId}`)
         .set("Authorization", `Bearer ${staffToken}`);
 
       expect(res.statusCode).toEqual(200);
       expect(res.body.success).toBe(true);
-      expect(res.body.data._id).toBe(catId);
+      expect(res.body.data.id).toBe(catId);
     });
 
     it("should return 404 for invalid/non-existent category ID", async () => {
-      const fakeId = new mongoose.Types.ObjectId().toString();
       const res = await request(app)
-        .get(`/api/categories/${fakeId}`)
+        .get(`/api/categories/9999`)
         .set("Authorization", `Bearer ${staffToken}`);
 
       expect(res.statusCode).toEqual(404);
@@ -146,25 +149,25 @@ describe("Category Module API Tests (/api/categories)", () => {
       const cat = await Category.create({ name: "Unused Category" });
 
       const res = await request(app)
-        .delete(`/api/categories/${cat._id}`)
+        .delete(`/api/categories/${cat.categoryId}`)
         .set("Authorization", `Bearer ${adminToken}`);
 
       expect(res.statusCode).toEqual(200);
       expect(res.body.success).toBe(true);
 
-      const check = await Category.findById(cat._id);
+      const check = await Category.findOne({ categoryId: cat.categoryId });
       expect(check).toBeNull();
     });
 
     it("should reject deletion if category is used by a SubCategory", async () => {
       const cat = await Category.create({ name: "Used Category" });
       await SubCategory.create({
-        categoryId: cat._id,
+        categoryId: cat.categoryId,
         name: "Ladies Wear",
       });
 
       const res = await request(app)
-        .delete(`/api/categories/${cat._id}`)
+        .delete(`/api/categories/${cat.categoryId}`)
         .set("Authorization", `Bearer ${adminToken}`);
 
       expect(res.statusCode).toEqual(400);
