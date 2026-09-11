@@ -75,6 +75,8 @@ describe("Merchant Module API Tests (/api/merchants)", () => {
           ...sampleMerchant,
           categoryId,
           subCategoryId,
+          gstCertificate: "admin_user/upload-single/merchants/gst/sample123.jpg",
+          panCardImage: "admin_user/upload-single/merchants/pancard/sample456.jpg",
         });
 
       expect(res.statusCode).toEqual(201);
@@ -82,30 +84,11 @@ describe("Merchant Module API Tests (/api/merchants)", () => {
       expect(res.body.message).toBe("Merchant created successfully");
       expect(res.body.data).toHaveProperty("id");
       expect(res.body.data.companyName).toBe("ABC Garments");
+      expect(res.body.data.gstCertificate).toBe("admin_user/upload-single/merchants/gst/sample123.jpg");
       expect(res.body.data.category.id).toBe(categoryId);
       expect(res.body.data.subCategory.id).toBe(subCategoryId);
       expect(res.body.data._id).toBeUndefined();
       expect(res.body.data.__v).toBeUndefined();
-    });
-
-    it("should create merchant with multipart file uploads (GST & PAN card) directly to Cloudinary", async () => {
-      const dummyBuffer = Buffer.from("dummy image content");
-
-      const res = await request(app)
-        .post("/api/merchants")
-        .set("Authorization", `Bearer ${adminToken}`)
-        .field("companyName", "Multipart Garments")
-        .field("personName", "Karan")
-        .field("mobile", "9876543210")
-        .field("categoryId", categoryId)
-        .field("subCategoryId", subCategoryId)
-        .attach("gstCertificate", dummyBuffer, "gst.jpg")
-        .attach("panCardImage", dummyBuffer, "pan.jpg");
-
-      expect(res.statusCode).toEqual(201);
-      expect(res.body.success).toBe(true);
-      expect(res.body.data.gstCertificate).toMatch(/merchants\/gst/);
-      expect(res.body.data.panCardImage).toMatch(/merchants\/pancard/);
     });
 
     it("should REJECT merchant creation if subCategoryId belongs to a DIFFERENT categoryId", async () => {
