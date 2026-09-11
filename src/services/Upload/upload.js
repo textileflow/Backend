@@ -1,35 +1,20 @@
 const { uploadToCloudinary } = require("../../config/cloudinary");
 const CustomError = require("../../utils/Common/customError");
 
-/**
- * Helper to sanitize user name for clean Cloudinary folder naming
- * e.g., "Rajesh Patel" -> "rajesh_patel"
- */
-const sanitizeUserName = (userName) => {
-  if (!userName) return "default_user";
-  return userName
-    .toLowerCase()
-    .trim()
-    .replace(/[^a-z0-9]/g, "_")
-    .replace(/_+/g, "_");
-};
-
 class UploadService {
   /**
-   * Upload a single file to Cloudinary with User-wise dynamic folder structure
+   * Upload a single file to Cloudinary with folder path 'upload-single/<filename>'
    * @param {Object} file - Express Multer file object
-   * @param {String} userName - Logged in user name from req.user.name
-   * @param {String} subFolder - Optional sub-folder (default: 'merchants/gst')
+   * @param {String} folder - Folder name in Cloudinary (default: 'upload-single')
    */
-  async uploadSingle(file, userName, subFolder = "merchants/gst") {
+  async uploadSingle(file, folder = "upload-single") {
     if (!file || !file.buffer) {
       throw new CustomError("Please select a file to upload", 400);
     }
 
-    const sanitizedUser = sanitizeUserName(userName);
-    const folderPath = `${sanitizedUser}/upload-single/${subFolder.replace(/^\/+|\/+$/g, "")}`;
-
+    const folderPath = folder ? folder.replace(/^\/+|\/+$/g, "") : "upload-single";
     const result = await uploadToCloudinary(file.buffer, folderPath);
+
     return {
       path: result.path,
       fullUrl: result.fullUrl,
@@ -37,13 +22,11 @@ class UploadService {
   }
 
   /**
-   * Upload multiple files to Cloudinary with User-wise dynamic folder structure
-   * Returns an ARRAY of objects [{ path, fullUrl }, ...]
+   * Upload multiple files to Cloudinary with folder path 'upload-multiple/<filename>'
    * @param {Array|Object} files - Array or Object of Express Multer file objects
-   * @param {String} userName - Logged in user name from req.user.name
-   * @param {String} subFolder - Optional sub-folder (default: 'merchants/documents')
+   * @param {String} folder - Folder name in Cloudinary (default: 'upload-multiple')
    */
-  async uploadMultiple(files = [], userName, subFolder = "merchants/documents") {
+  async uploadMultiple(files = [], folder = "upload-multiple") {
     let fileList = [];
     if (Array.isArray(files)) {
       fileList = files;
@@ -55,15 +38,13 @@ class UploadService {
       throw new CustomError("Please select at least one file to upload", 400);
     }
 
-    const sanitizedUser = sanitizeUserName(userName);
-    const folderPath = `${sanitizedUser}/upload-multiple/${subFolder.replace(/^\/+|\/+$/g, "")}`;
+    const folderPath = folder ? folder.replace(/^\/+|\/+$/g, "") : "upload-multiple";
 
     const uploadPromises = fileList.map((file) =>
       uploadToCloudinary(file.buffer, folderPath)
     );
     const results = await Promise.all(uploadPromises);
 
-    // Guaranteed Array response
     return results.map((res) => ({
       path: res.path,
       fullUrl: res.fullUrl,

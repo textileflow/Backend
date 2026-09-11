@@ -38,11 +38,11 @@ beforeEach(async () => {
 
 describe("Upload Module API Tests (/api/upload)", () => {
   describe("POST /api/upload/single", () => {
-    it("should upload single file under logged-in user folder (admin_user/upload-single/merchants/gst)", async () => {
+    it("should upload single file and return path starting with upload-single/", async () => {
       const dummyBuffer = Buffer.from("dummy file content for single upload");
 
       const res = await request(app)
-        .post("/api/upload/single?folder=merchants/gst")
+        .post("/api/upload/single")
         .set("Authorization", `Bearer ${adminToken}`)
         .attach("file", dummyBuffer, "gst_cert.jpg");
 
@@ -51,9 +51,9 @@ describe("Upload Module API Tests (/api/upload)", () => {
       expect(res.body.data).toHaveProperty("path");
       expect(res.body.data).toHaveProperty("fullUrl");
 
-      // Verify User-Wise Folder Naming
-      expect(res.body.data.path).toMatch(/admin_user\/upload-single\/merchants\/gst/);
-      expect(res.body.data.fullUrl).toMatch(/admin_user\/upload-single\/merchants\/gst/);
+      // Verify exact path format: upload-single/<filename>
+      expect(res.body.data.path).toMatch(/^upload-single\//);
+      expect(res.body.data.fullUrl).toMatch(/\/upload-single\//);
     });
 
     it("should reject single upload if no file attached", async () => {
@@ -68,12 +68,12 @@ describe("Upload Module API Tests (/api/upload)", () => {
   });
 
   describe("POST /api/upload/multiple", () => {
-    it("should upload multiple files under logged-in user folder (admin_user/upload-multiple/merchants/documents)", async () => {
+    it("should upload multiple files and return paths starting with upload-multiple/", async () => {
       const dummyBuffer1 = Buffer.from("dummy file content 1");
       const dummyBuffer2 = Buffer.from("dummy file content 2");
 
       const res = await request(app)
-        .post("/api/upload/multiple?folder=merchants/documents")
+        .post("/api/upload/multiple")
         .set("Authorization", `Bearer ${adminToken}`)
         .attach("files", dummyBuffer1, "doc1.jpg")
         .attach("files", dummyBuffer2, "doc2.png");
@@ -82,8 +82,10 @@ describe("Upload Module API Tests (/api/upload)", () => {
       expect(res.body.success).toBe(true);
       expect(Array.isArray(res.body.data)).toBe(true);
       expect(res.body.data.length).toBe(2);
-      expect(res.body.data[0].path).toMatch(/admin_user\/upload-multiple\/merchants\/documents/);
-      expect(res.body.data[0].fullUrl).toMatch(/admin_user\/upload-multiple\/merchants\/documents/);
+
+      // Verify exact path format: upload-multiple/<filename>
+      expect(res.body.data[0].path).toMatch(/^upload-multiple\//);
+      expect(res.body.data[0].fullUrl).toMatch(/\/upload-multiple\//);
     });
   });
 });

@@ -2,20 +2,14 @@ const uploadService = require("../../services/Upload/upload");
 const { sendSuccess } = require("../../utils/Common/apiResponse");
 
 /**
- * @desc    Upload single file to Cloudinary under logged-in user folder
+ * @desc    Upload single file to Cloudinary under 'upload-single/' folder
  * @route   POST /api/upload/single
  * @access  Private (ADMIN, MANAGER, STAFF)
  */
 const uploadSingle = async (req, res, next) => {
   try {
-    const userName = req.user ? req.user.name : "default_user";
-    const subFolder = req.query.folder || req.body.folder || "merchants/gst";
-
-    const data = await uploadService.uploadSingle(
-      req.file,
-      userName,
-      subFolder
-    );
+    const folder = req.query.folder || req.body.folder || "upload-single";
+    const data = await uploadService.uploadSingle(req.file, folder);
     return sendSuccess(res, 200, "File uploaded successfully", data);
   } catch (error) {
     next(error);
@@ -23,20 +17,14 @@ const uploadSingle = async (req, res, next) => {
 };
 
 /**
- * @desc    Upload multiple files to Cloudinary under logged-in user folder
+ * @desc    Upload multiple files to Cloudinary under 'upload-multiple/' folder
  * @route   POST /api/upload/multiple
  * @access  Private (ADMIN, MANAGER, STAFF)
  */
 const uploadMultiple = async (req, res, next) => {
   try {
-    const userName = req.user ? req.user.name : "default_user";
-    const subFolder = req.query.folder || req.body.folder || "merchants/documents";
-
-    const data = await uploadService.uploadMultiple(
-      req.files,
-      userName,
-      subFolder
-    );
+    const folder = req.query.folder || req.body.folder || "upload-multiple";
+    const data = await uploadService.uploadMultiple(req.files, folder);
     return sendSuccess(res, 200, "Files uploaded successfully", data);
   } catch (error) {
     next(error);
