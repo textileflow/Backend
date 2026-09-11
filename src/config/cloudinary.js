@@ -1,27 +1,24 @@
 const cloudinary = require("cloudinary").v2;
 
 cloudinary.config({
-  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
-  api_key: process.env.CLOUDINARY_API_KEY,
-  api_secret: process.env.CLOUDINARY_API_SECRET,
+  cloud_name: process.env.CLOUDINARY_CLOUD_NAME || "qpef1ssl",
+  api_key: process.env.CLOUDINARY_API_KEY || "466355394478972",
+  api_secret: process.env.CLOUDINARY_API_SECRET || "01zNSLl4C3sS8UPZr3p1sdlIdug",
 });
 
 /**
  * Upload file buffer directly to Cloudinary (RAM buffer, no local disk storage)
  * @param {Buffer} fileBuffer - Buffer from Multer memoryStorage
- * @param {String} folder - User-specific Cloudinary folder path (e.g. 'john_doe/upload-single/merchants/gst')
+ * @param {String} folder - User-specific Cloudinary folder path
  * @returns {Promise<Object>} Object containing relative path and fullUrl
  */
 const uploadToCloudinary = (fileBuffer, folder = "merchants") => {
   return new Promise((resolve, reject) => {
-    const cloudName = process.env.CLOUDINARY_CLOUD_NAME || "your-cloud";
+    const cloudName = process.env.CLOUDINARY_CLOUD_NAME || "qpef1ssl";
     const timestamp = Date.now();
 
-    // If in test environment or Cloudinary credentials missing, return mock uploaded path & fullUrl
-    if (
-      process.env.NODE_ENV === "test" ||
-      !process.env.CLOUDINARY_CLOUD_NAME
-    ) {
+    // If in test environment (Jest tests), return mock uploaded path & fullUrl
+    if (process.env.NODE_ENV === "test") {
       const mockRelativePath = `${folder}/${timestamp}.jpg`;
       return resolve({
         path: mockRelativePath,
