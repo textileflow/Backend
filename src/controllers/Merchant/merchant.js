@@ -2,13 +2,13 @@ const merchantService = require("../../services/Merchant/merchant");
 const { sendSuccess } = require("../../utils/Common/apiResponse");
 
 /**
- * @desc    Create a new merchant
+ * @desc    Create a new merchant (supports text data and file uploads for gstCertificate & panCardImage)
  * @route   POST /api/merchants
  * @access  Private (ADMIN, MANAGER)
  */
 const create = async (req, res, next) => {
   try {
-    const merchant = await merchantService.createMerchant(req.body);
+    const merchant = await merchantService.createMerchant(req.body, req.files);
     return sendSuccess(
       res,
       201,
@@ -64,13 +64,17 @@ const getById = async (req, res, next) => {
 };
 
 /**
- * @desc    Update merchant by ID
+ * @desc    Update merchant by ID (supports file uploads for gstCertificate & panCardImage)
  * @route   PUT /api/merchants/:id
  * @access  Private (ADMIN, MANAGER)
  */
 const update = async (req, res, next) => {
   try {
-    const merchant = await merchantService.updateMerchant(req.params.id, req.body);
+    const merchant = await merchantService.updateMerchant(
+      req.params.id,
+      req.body,
+      req.files
+    );
     return sendSuccess(
       res,
       200,

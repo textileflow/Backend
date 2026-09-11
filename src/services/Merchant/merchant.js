@@ -2,6 +2,7 @@ const Merchant = require("../../models/Merchant/merchant");
 const Category = require("../../models/Category/category");
 const SubCategory = require("../../models/SubCategory/subCategory");
 const CustomError = require("../../utils/Common/customError");
+const { uploadToCloudinary } = require("../../config/cloudinary");
 
 /**
  * Format merchant object safely with populated Category & SubCategory details
@@ -35,9 +36,9 @@ const formatMerchant = async (merchant) => {
 
 class MerchantService {
   /**
-   * Create a new Merchant
+   * Create a new Merchant with optional GST Certificate & PAN Card file upload
    */
-  async createMerchant(merchantData) {
+  async createMerchant(merchantData, files = {}) {
     const numCategoryId = Number(merchantData.categoryId);
     const numSubCategoryId = Number(merchantData.subCategoryId);
 
@@ -60,12 +61,32 @@ class MerchantService {
       throw new CustomError("Selected Sub Category does not exist", 404);
     }
 
-    // 3. CRITICAL: Verify Sub Category belongs to selected Category
+    // 3. Verify Sub Category belongs to selected Category
     if (subCategory.categoryId !== numCategoryId) {
       throw new CustomError(
         "Sub category does not belong to selected category",
         400
       );
+    }
+
+    // 4. Process file uploads directly to Cloudinary (No local disk storage)
+    let gstCertificateUrl = merchantData.gstCertificate || null;
+    let panCardImageUrl = merchantData.panCardImage || null;
+
+    if (files && files.gstCertificate && files.gstCertificate[0]) {
+      const result = await uploadToCloudinary(
+        files.gstCertificate[0].buffer,
+        "merchants/gst"
+      );
+      gstCertificateUrl = result.path;
+    }
+
+    if (files && files.panCardImage && files.panCardImage[0]) {
+      const result = await uploadToCloudinary(
+        files.panCardImage[0].buffer,
+        "merchants/pancard"
+      );
+      panCardImageUrl = result.path;
     }
 
     const merchant = await Merchant.create({
@@ -76,9 +97,9 @@ class MerchantService {
       address: merchantData.address ? merchantData.address.trim() : "",
       paymentTerm: merchantData.paymentTerm ? merchantData.paymentTerm.trim() : "",
       gstName: merchantData.gstName ? merchantData.gstName.trim() : "",
-      gstCertificate: merchantData.gstCertificate || null,
+      gstCertificate: gstCertificateUrl,
       panCard: merchantData.panCard ? merchantData.panCard.trim() : "",
-      panCardImage: merchantData.panCardImage || null,
+      panCardImage: panCardImageUrl,
       categoryId: numCategoryId,
       subCategoryId: numSubCategoryId,
       note: merchantData.note ? merchantData.note.trim() : "",
@@ -88,7 +109,7 @@ class MerchantService {
   }
 
   /**
-   * Get all Merchants with filtering (categoryId, subCategoryId) & search (companyName, personName, mobile)
+   * Get all Merchants with filtering (categoryId, subCategoryId) & search
    */
   async getAllMerchants({ categoryId, subCategoryId, search }) {
     const query = {};
@@ -134,9 +155,9 @@ class MerchantService {
   }
 
   /**
-   * Update Merchant by numeric ID
+   * Update Merchant by numeric ID with optional file upload
    */
-  async updateMerchant(id, updateData) {
+  async updateMerchant(id, updateData, files = {}) {
     const numericId = Number(id);
     if (isNaN(numericId)) {
       throw new CustomError("Invalid Merchant ID", 400);
@@ -170,7 +191,28 @@ class MerchantService {
       }
     }
 
-    // Apply updates
+    // Process file uploads to Cloudinary if provided
+    if (files && files.gstCertificate && files.gstCertificate[0]) {
+      const result = await uploadToCloudinary(
+        files.gstCertificate[0].buffer,
+        "merchants/gst"
+      );
+      merchant.gstCertificate = result.path;
+    } else if (updateData.gstCertificate !== undefined) {
+      merchant.gstCertificate = updateData.gstCertificate;
+    }
+
+    if (files && files.panCardImage && files.panCardImage[0]) {
+      const result = await uploadToCloudinary(
+        files.panCardImage[0].buffer,
+        "merchants/pancard"
+      );
+      merchant.panCardImage = result.path;
+    } else if (updateData.panCardImage !== undefined) {
+      merchant.panCardImage = updateData.panCardImage;
+    }
+
+    // Apply text field updates
     if (updateData.companyName) merchant.companyName = updateData.companyName.trim();
     if (updateData.personName) merchant.personName = updateData.personName.trim();
     if (updateData.mobile) merchant.mobile = String(updateData.mobile).trim();
@@ -182,12 +224,8 @@ class MerchantService {
       merchant.paymentTerm = updateData.paymentTerm ? updateData.paymentTerm.trim() : "";
     if (updateData.gstName !== undefined)
       merchant.gstName = updateData.gstName ? updateData.gstName.trim() : "";
-    if (updateData.gstCertificate !== undefined)
-      merchant.gstCertificate = updateData.gstCertificate;
     if (updateData.panCard !== undefined)
       merchant.panCard = updateData.panCard ? updateData.panCard.trim() : "";
-    if (updateData.panCardImage !== undefined)
-      merchant.panCardImage = updateData.panCardImage;
     if (updateData.categoryId !== undefined) merchant.categoryId = targetCategoryId;
     if (updateData.subCategoryId !== undefined) merchant.subCategoryId = targetSubCategoryId;
     if (updateData.note !== undefined)

@@ -1,15 +1,16 @@
 # Embroidery ERP - Backend API
 
-Production-ready Backend API microservice architecture for Embroidery ERP Software. Built with Node.js, Express.js, MongoDB, Mongoose, JWT, and bcrypt.
+Production-ready Backend API microservice architecture for Embroidery ERP Software. Built with Node.js, Express.js, MongoDB, Mongoose, JWT, Cloudinary, and bcrypt.
 
 ---
 
 ## 📋 Implemented Modules
 
 1. **Authentication API**: User registration with numeric auto-incrementing IDs, login, profile retrieval by ID, JWT authorization, protected logout, role-based access control (`admin`, `manager`, `staff`).
-2. **Category Master Module**: Full CRUD for product categories with unique constraint and deletion protection.
-3. **Sub Category Master Module**: Full CRUD for sub-categories referenced to Categories with compound uniqueness (`categoryId` + `name`) and deletion protection.
-4. **Merchant / Job Work Customer Module**: Master data module for job work customers with file upload reference support, category-subcategory relationship validation, search & filtering.
+2. **Category Master Module**: Full CRUD for product categories with numeric auto-increment ID, unique constraint and deletion protection.
+3. **Sub Category Master Module**: Full CRUD for sub-categories with numeric auto-increment ID, referenced to Categories with compound uniqueness (`categoryId` + `name`) and deletion protection.
+4. **Merchant / Job Work Customer Module**: Master data module for job work customers with GST & PAN document references, numeric auto-increment ID, category-subcategory relationship validation, search & filtering.
+5. **Standalone Upload Module**: Independent file upload service supporting single and multiple file uploads directly to Cloudinary (RAM memory storage, zero local disk storage).
 
 ---
 
@@ -18,7 +19,8 @@ Production-ready Backend API microservice architecture for Embroidery ERP Softwa
 ```
 src/
 ├── config/
-│   └── db.js                    # Database connection setup
+│   ├── db.js                    # Database connection setup
+│   └── cloudinary.js            # Cloudinary configuration & buffer uploader
 ├── controllers/
 │   ├── Auth/
 │   │   └── auth.js              # Auth controller handlers
@@ -26,23 +28,28 @@ src/
 │   │   └── category.js          # Category controller handlers
 │   ├── SubCategory/
 │   │   └── subCategory.js       # SubCategory controller handlers
-│   └── Merchant/
-│       └── merchant.js          # Merchant controller handlers
+│   ├── Merchant/
+│   │   └── merchant.js          # Merchant controller handlers
+│   └── Upload/
+│       └── upload.js            # Standalone Upload controller (single & multiple)
 ├── middleware/
 │   ├── Auth/
 │   │   └── auth.js              # Auth & Role middleware guards
 │   └── Common/
 │       ├── error.js             # 404 & Centralized error handler
+│       ├── upload.js            # Multer RAM memory storage middleware
 │       └── validate.js          # Request validation error handler
 ├── models/
 │   ├── Auth/
-│   │   └── auth.js              # User Mongoose model (Numeric custom userId)
+│   │   └── auth.js              # User Mongoose model
 │   ├── Category/
-│   │   └── category.js          # Category Mongoose model
+│   │   └── category.js          # Category Mongoose model (Numeric custom ID)
 │   ├── SubCategory/
-│   │   └── subCategory.js       # SubCategory Mongoose model
-│   └── Merchant/
-│       └── merchant.js          # Merchant Mongoose model
+│   │   └── subCategory.js       # SubCategory Mongoose model (Numeric custom ID)
+│   ├── Merchant/
+│   │   └── merchant.js          # Merchant Mongoose model (Numeric custom ID)
+│   └── Common/
+│       └── counter.js           # Shared numeric sequence Counter model
 ├── routes/
 │   ├── Auth/
 │   │   └── auth.js              # Auth routes (/api/auth)
@@ -50,8 +57,10 @@ src/
 │   │   └── category.js          # Category routes (/api/categories)
 │   ├── SubCategory/
 │   │   └── subCategory.js       # SubCategory routes (/api/subcategories)
-│   └── Merchant/
-│       └── merchant.js          # Merchant routes (/api/merchants)
+│   ├── Merchant/
+│   │   └── merchant.js          # Merchant routes (/api/merchants)
+│   └── Upload/
+│       └── upload.js            # Upload routes (/api/upload/single, /api/upload/multiple)
 ├── services/
 │   ├── Auth/
 │   │   └── auth.js              # Auth business logic service
@@ -59,8 +68,10 @@ src/
 │   │   └── category.js          # Category business logic service
 │   ├── SubCategory/
 │   │   └── subCategory.js       # SubCategory business logic service
-│   └── Merchant/
-│       └── merchant.js          # Merchant business logic service
+│   ├── Merchant/
+│   │   └── merchant.js          # Merchant business logic service
+│   └── Upload/
+│       └── upload.js            # Upload business logic service
 ├── utils/
 │   ├── Auth/
 │   │   ├── generateToken.js     # JWT token generator
@@ -80,7 +91,8 @@ tests/
 ├── auth.test.js                 # Auth integration tests (13 tests)
 ├── category.test.js             # Category integration tests (6 tests)
 ├── subCategory.test.js          # SubCategory integration tests (6 tests)
-└── merchant.test.js             # Merchant integration tests (6 tests)
+├── merchant.test.js             # Merchant integration tests (7 tests)
+└── upload.test.js               # Upload integration tests (3 tests)
 ```
 
 ---
@@ -101,8 +113,8 @@ tests/
 | :------- | :--------------------- | :----------------------- | :---------------------------------------------- |
 | `POST`   | `/api/categories`      | Admin, Manager           | Create a new category                           |
 | `GET`    | `/api/categories`      | Admin, Manager, Staff    | Get all categories                              |
-| `GET`    | `/api/categories/:id`  | Admin, Manager, Staff    | Get single category by ID                       |
-| `PUT`    | `/api/categories/:id`  | Admin, Manager           | Update category                                 |
+| `GET`    | `/api/categories/:id`  | Admin, Manager, Staff    | Get single category by numeric ID               |
+| `PUT`    | `/api/categories/:id`  | Admin, Manager           | Update category by numeric ID                   |
 | `DELETE` | `/api/categories/:id`  | Admin, Manager           | Delete category (protected against in-use items)|
 
 ### Sub Category APIs (`/api/subcategories`)
@@ -110,9 +122,9 @@ tests/
 | :------- | :----------------------------------- | :-------------------- | :------------------------------------------------- |
 | `POST`   | `/api/subcategories`                 | Admin, Manager        | Create a new sub-category                          |
 | `GET`    | `/api/subcategories`                 | Admin, Manager, Staff | Get all sub-categories                             |
-| `GET`    | `/api/subcategories/:id`             | Admin, Manager, Staff | Get single sub-category                            |
-| `GET`    | `/api/subcategories/category/:catId` | Admin, Manager, Staff | Get all sub-categories for a specific category     |
-| `PUT`    | `/api/subcategories/:id`             | Admin, Manager        | Update sub-category                                |
+| `GET`    | `/api/subcategories/:id`             | Admin, Manager, Staff | Get single sub-category by numeric ID              |
+| `GET`    | `/api/subcategories/category/:catId` | Admin, Manager, Staff | Get all sub-categories for a specific category ID  |
+| `PUT`    | `/api/subcategories/:id`             | Admin, Manager        | Update sub-category by numeric ID                  |
 | `DELETE` | `/api/subcategories/:id`             | Admin, Manager        | Delete sub-category (protected against in-use items)|
 
 ### Merchant / Job Work Customer APIs (`/api/merchants`)
@@ -120,9 +132,15 @@ tests/
 | :------- | :-------------------- | :-------------------- | :--------------------------------------------------- |
 | `POST`   | `/api/merchants`      | Admin, Manager        | Create a new merchant/customer                       |
 | `GET`    | `/api/merchants`      | Admin, Manager, Staff | Get all merchants (support search, categoryId filter)|
-| `GET`    | `/api/merchants/:id`  | Admin, Manager, Staff | Get single merchant by ID                            |
-| `PUT`    | `/api/merchants/:id`  | Admin, Manager        | Update merchant                                      |
-| `DELETE` | `/api/merchants/:id`  | Admin, Manager        | Delete merchant                                      |
+| `GET`    | `/api/merchants/:id`  | Admin, Manager, Staff | Get single merchant by numeric ID                    |
+| `PUT`    | `/api/merchants/:id`  | Admin, Manager        | Update merchant by numeric ID                        |
+| `DELETE` | `/api/merchants/:id`  | Admin, Manager        | Delete merchant by numeric ID                        |
+
+### Standalone Upload APIs (`/api/upload`)
+| Method | Endpoint                | Access                | Description                                                          |
+| :----- | :---------------------- | :-------------------- | :------------------------------------------------------------------- |
+| `POST` | `/api/upload/single`   | Admin, Manager, Staff | Upload single file, returns `{ path, fullUrl }`                      |
+| `POST` | `/api/upload/multiple` | Admin, Manager, Staff | Upload multiple files (max 10), returns array `[{ path, fullUrl }]` |
 
 ---
 

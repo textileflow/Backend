@@ -7,6 +7,7 @@ const authRoutes = require("./routes/Auth/auth");
 const categoryRoutes = require("./routes/Category/category");
 const subCategoryRoutes = require("./routes/SubCategory/subCategory");
 const merchantRoutes = require("./routes/Merchant/merchant");
+const uploadRoutes = require("./routes/Upload/upload");
 const {
   notFoundHandler,
   errorHandler,
@@ -61,6 +62,7 @@ app.use("/api/auth", authRoutes);
 app.use("/api/categories", categoryRoutes);
 app.use("/api/subcategories", subCategoryRoutes);
 app.use("/api/merchants", merchantRoutes);
+app.use("/api/upload", uploadRoutes);
 
 // 7. Handle 404 routes
 app.use(notFoundHandler);
