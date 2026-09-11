@@ -8,6 +8,7 @@ cloudinary.config({
 
 /**
  * Upload file buffer directly to Cloudinary (RAM buffer, no local disk storage)
+ * Supports Images (JPG, PNG, WEBP, SVG), PDFs, Word Documents, Excel, ZIP, etc.
  * @param {Buffer} fileBuffer - Buffer from Multer memoryStorage
  * @param {String} folder - User-specific Cloudinary folder path
  * @returns {Promise<Object>} Object containing relative path and fullUrl
@@ -27,17 +28,19 @@ const uploadToCloudinary = (fileBuffer, folder = "merchants") => {
       });
     }
 
+    const uploadOptions = {
+      folder: folder,
+      resource_type: "auto", // Automatically detects images, PDFs, raw documents, videos
+    };
+
     const uploadStream = cloudinary.uploader.upload_stream(
-      {
-        folder: folder,
-        resource_type: "auto",
-      },
+      uploadOptions,
       (error, result) => {
         if (error) return reject(error);
 
-        // Extract relative path after /image/upload/ (and version if present)
+        // Extract relative path after /(image|raw|video)/upload/
         let relativePath = result.secure_url;
-        const match = result.secure_url.match(/image\/upload\/(?:v\d+\/)?(.+)$/);
+        const match = result.secure_url.match(/(?:image|raw|video)\/upload\/(?:v\d+\/)?(.+)$/);
         if (match) {
           relativePath = match[1];
         }
@@ -46,6 +49,7 @@ const uploadToCloudinary = (fileBuffer, folder = "merchants") => {
           path: relativePath,
           fullUrl: result.secure_url,
           public_id: result.public_id,
+          resource_type: result.resource_type,
         });
       }
     );

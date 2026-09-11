@@ -38,23 +38,32 @@ class UploadService {
 
   /**
    * Upload multiple files to Cloudinary with User-wise dynamic folder structure
-   * @param {Array} files - Array of Express Multer file objects
+   * Returns an ARRAY of objects [{ path, fullUrl }, ...]
+   * @param {Array|Object} files - Array or Object of Express Multer file objects
    * @param {String} userName - Logged in user name from req.user.name
    * @param {String} subFolder - Optional sub-folder (default: 'merchants/documents')
    */
   async uploadMultiple(files = [], userName, subFolder = "merchants/documents") {
-    if (!files || files.length === 0) {
+    let fileList = [];
+    if (Array.isArray(files)) {
+      fileList = files;
+    } else if (files && typeof files === "object") {
+      fileList = Object.values(files).flat();
+    }
+
+    if (!fileList || fileList.length === 0) {
       throw new CustomError("Please select at least one file to upload", 400);
     }
 
     const sanitizedUser = sanitizeUserName(userName);
     const folderPath = `${sanitizedUser}/upload-multiple/${subFolder.replace(/^\/+|\/+$/g, "")}`;
 
-    const uploadPromises = files.map((file) =>
+    const uploadPromises = fileList.map((file) =>
       uploadToCloudinary(file.buffer, folderPath)
     );
     const results = await Promise.all(uploadPromises);
 
+    // Guaranteed Array response
     return results.map((res) => ({
       path: res.path,
       fullUrl: res.fullUrl,

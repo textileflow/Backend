@@ -1,37 +1,19 @@
 const multer = require("multer");
-const CustomError = require("../../utils/Common/customError");
 
 // Use RAM memory storage (zero local disk file creation)
 const storage = multer.memoryStorage();
 
-// File filter (accept images and PDF documents)
+// Allow all file types (Images, PDFs, Word documents, Excel sheets, ZIP, Text, etc.)
 const fileFilter = (req, file, cb) => {
-  const allowedMimeTypes = [
-    "image/jpeg",
-    "image/jpg",
-    "image/png",
-    "image/webp",
-    "application/pdf",
-  ];
-
-  if (allowedMimeTypes.includes(file.mimetype)) {
-    cb(null, true);
-  } else {
-    cb(
-      new CustomError(
-        "Invalid file type. Only JPG, PNG, WEBP images and PDF documents are allowed.",
-        400
-      ),
-      false
-    );
-  }
+  // Accept all incoming files
+  cb(null, true);
 };
 
 const upload = multer({
   storage: storage,
   fileFilter: fileFilter,
   limits: {
-    fileSize: 5 * 1024 * 1024, // 5 MB max file size per file
+    fileSize: 10 * 1024 * 1024, // 10 MB max file size per file
   },
 });
 
