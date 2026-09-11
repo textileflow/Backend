@@ -9,7 +9,7 @@ Production-ready Backend API microservice architecture for Embroidery ERP Softwa
 1. **Authentication API**: User registration with numeric auto-incrementing IDs, login, profile retrieval by ID, JWT authorization, protected logout, role-based access control (`admin`, `manager`, `staff`).
 2. **Category Master Module**: Full CRUD for product categories with unique constraint and deletion protection.
 3. **Sub Category Master Module**: Full CRUD for sub-categories referenced to Categories with compound uniqueness (`categoryId` + `name`) and deletion protection.
-4. **Trader / Job Work Customer Module**: Master data module for job work customers with file upload reference support, category-subcategory relationship validation, search & filtering.
+4. **Merchant / Job Work Customer Module**: Master data module for job work customers with file upload reference support, category-subcategory relationship validation, search & filtering.
 
 ---
 
@@ -26,8 +26,8 @@ src/
 │   │   └── category.js          # Category controller handlers
 │   ├── SubCategory/
 │   │   └── subCategory.js       # SubCategory controller handlers
-│   └── Trader/
-│       └── trader.js            # Trader controller handlers
+│   └── Merchant/
+│       └── merchant.js          # Merchant controller handlers
 ├── middleware/
 │   ├── Auth/
 │   │   └── auth.js              # Auth & Role middleware guards
@@ -41,8 +41,8 @@ src/
 │   │   └── category.js          # Category Mongoose model
 │   ├── SubCategory/
 │   │   └── subCategory.js       # SubCategory Mongoose model
-│   └── Trader/
-│       └── trader.js            # Trader Mongoose model
+│   └── Merchant/
+│       └── merchant.js          # Merchant Mongoose model
 ├── routes/
 │   ├── Auth/
 │   │   └── auth.js              # Auth routes (/api/auth)
@@ -50,8 +50,8 @@ src/
 │   │   └── category.js          # Category routes (/api/categories)
 │   ├── SubCategory/
 │   │   └── subCategory.js       # SubCategory routes (/api/subcategories)
-│   └── Trader/
-│       └── trader.js            # Trader routes (/api/traders)
+│   └── Merchant/
+│       └── merchant.js          # Merchant routes (/api/merchants)
 ├── services/
 │   ├── Auth/
 │   │   └── auth.js              # Auth business logic service
@@ -59,8 +59,8 @@ src/
 │   │   └── category.js          # Category business logic service
 │   ├── SubCategory/
 │   │   └── subCategory.js       # SubCategory business logic service
-│   └── Trader/
-│       └── trader.js            # Trader business logic service
+│   └── Merchant/
+│       └── merchant.js          # Merchant business logic service
 ├── utils/
 │   ├── Auth/
 │   │   ├── generateToken.js     # JWT token generator
@@ -69,8 +69,8 @@ src/
 │   │   └── validators.js        # Category validators
 │   ├── SubCategory/
 │   │   └── validators.js        # SubCategory validators
-│   ├── Trader/
-│   │   └── validators.js        # Trader validators
+│   ├── Merchant/
+│   │   └── validators.js        # Merchant validators
 │   └── Common/
 │       ├── apiResponse.js       # Success response helper
 │       └── customError.js       # Custom operational error class
@@ -80,7 +80,7 @@ tests/
 ├── auth.test.js                 # Auth integration tests (13 tests)
 ├── category.test.js             # Category integration tests (6 tests)
 ├── subCategory.test.js          # SubCategory integration tests (6 tests)
-└── trader.test.js               # Trader integration tests (6 tests)
+└── merchant.test.js             # Merchant integration tests (6 tests)
 ```
 
 ---
@@ -115,26 +115,26 @@ tests/
 | `PUT`    | `/api/subcategories/:id`             | Admin, Manager        | Update sub-category                                |
 | `DELETE` | `/api/subcategories/:id`             | Admin, Manager        | Delete sub-category (protected against in-use items)|
 
-### Trader / Job Work Customer APIs (`/api/traders`)
-| Method   | Endpoint            | Access                | Description                                        |
-| :------- | :------------------ | :-------------------- | :------------------------------------------------- |
-| `POST`   | `/api/traders`      | Admin, Manager        | Create a new trader/customer                       |
-| `GET`    | `/api/traders`      | Admin, Manager, Staff | Get all traders (support search, categoryId filter)|
-| `GET`    | `/api/traders/:id`  | Admin, Manager, Staff | Get single trader by ID                            |
-| `PUT`    | `/api/traders/:id`  | Admin, Manager        | Update trader                                      |
-| `DELETE` | `/api/traders/:id`  | Admin, Manager        | Delete trader                                      |
+### Merchant / Job Work Customer APIs (`/api/merchants`)
+| Method   | Endpoint              | Access                | Description                                          |
+| :------- | :-------------------- | :-------------------- | :--------------------------------------------------- |
+| `POST`   | `/api/merchants`      | Admin, Manager        | Create a new merchant/customer                       |
+| `GET`    | `/api/merchants`      | Admin, Manager, Staff | Get all merchants (support search, categoryId filter)|
+| `GET`    | `/api/merchants/:id`  | Admin, Manager, Staff | Get single merchant by ID                            |
+| `PUT`    | `/api/merchants/:id`  | Admin, Manager        | Update merchant                                      |
+| `DELETE` | `/api/merchants/:id`  | Admin, Manager        | Delete merchant                                      |
 
 ---
 
-## 🔗 Category → Sub Category → Trader Relationship Model
+## 🔗 Category → Sub Category → Merchant Relationship Model
 
 ```mermaid
 graph TD
-    A["Category (e.g. Garment Trader)"] -->|"1 to Many"| B["Sub Category (e.g. Ladies Wear)"]
-    B -->|"1 to Many"| C["Trader / Job Work Customer (e.g. ABC Garments)"]
+    A["Category (e.g. Garment Merchant)"] -->|"1 to Many"| B["Sub Category (e.g. Ladies Wear)"]
+    B -->|"1 to Many"| C["Merchant / Job Work Customer (e.g. ABC Garments)"]
 ```
 
-1. **Category**: High-level business classification (e.g., *Garment Trader*, *Saree Manufacturer*).
+1. **Category**: High-level business classification (e.g., *Garment Merchant*, *Saree Manufacturer*).
 2. **Sub Category**: Belongs to 1 specific Category (e.g., *Ladies Wear*, *Kids Wear*).
-3. **Trader (Job Work Customer)**: Must reference both a **Category** and a **Sub Category**.
+3. **Merchant (Job Work Customer)**: Must reference both a **Category** and a **Sub Category**.
    - **Enforced Business Rule**: The selected `subCategoryId` MUST belong to the selected `categoryId`. If mismatched, the request is rejected with `400 Bad Request`.

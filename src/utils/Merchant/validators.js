@@ -1,6 +1,6 @@
 const { body } = require("express-validator");
 
-const traderValidator = [
+const merchantValidator = [
   body("companyName")
     .trim()
     .notEmpty()
@@ -49,5 +49,5 @@ const traderValidator = [
 ];
 
 module.exports = {
-  traderValidator,
+  merchantValidator,
 };

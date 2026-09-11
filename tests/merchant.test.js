@@ -5,7 +5,7 @@ const app = require("../src/app");
 const User = require("../src/models/Auth/auth");
 const Category = require("../src/models/Category/category");
 const SubCategory = require("../src/models/SubCategory/subCategory");
-const Trader = require("../src/models/Trader/trader");
+const Merchant = require("../src/models/Merchant/merchant");
 
 let mongoServer;
 let adminToken;
@@ -33,7 +33,7 @@ beforeEach(async () => {
   await User.deleteMany({});
   await Category.deleteMany({});
   await SubCategory.deleteMany({});
-  await Trader.deleteMany({});
+  await Merchant.deleteMany({});
 
   const adminRes = await request(app).post("/api/auth/register").send({
     name: "Admin User",
@@ -43,7 +43,7 @@ beforeEach(async () => {
   });
   adminToken = adminRes.body.data.token;
 
-  const cat = await Category.create({ name: "Garment Trader" });
+  const cat = await Category.create({ name: "Garment Merchant" });
   categoryId = cat._id.toString();
 
   const subCat = await SubCategory.create({
@@ -53,8 +53,8 @@ beforeEach(async () => {
   subCategoryId = subCat._id.toString();
 });
 
-describe("Trader Module API Tests (/api/traders)", () => {
-  const sampleTrader = {
+describe("Merchant Module API Tests (/api/merchants)", () => {
+  const sampleMerchant = {
     companyName: "ABC Garments",
     personName: "John",
     mobile: "9999999999",
@@ -66,26 +66,26 @@ describe("Trader Module API Tests (/api/traders)", () => {
     note: "Regular job work customer",
   };
 
-  describe("POST /api/traders", () => {
-    it("should create trader successfully when subCategoryId belongs to categoryId", async () => {
+  describe("POST /api/merchants", () => {
+    it("should create merchant successfully when subCategoryId belongs to categoryId", async () => {
       const res = await request(app)
-        .post("/api/traders")
+        .post("/api/merchants")
         .set("Authorization", `Bearer ${adminToken}`)
         .send({
-          ...sampleTrader,
+          ...sampleMerchant,
           categoryId,
           subCategoryId,
         });
 
       expect(res.statusCode).toEqual(201);
       expect(res.body.success).toBe(true);
-      expect(res.body.message).toBe("Trader created successfully");
+      expect(res.body.message).toBe("Merchant created successfully");
       expect(res.body.data.companyName).toBe("ABC Garments");
-      expect(res.body.data.category.name).toBe("Garment Trader");
+      expect(res.body.data.category.name).toBe("Garment Merchant");
       expect(res.body.data.subCategory.name).toBe("Ladies Wear");
     });
 
-    it("should REJECT trader creation if subCategoryId belongs to a DIFFERENT categoryId", async () => {
+    it("should REJECT merchant creation if subCategoryId belongs to a DIFFERENT categoryId", async () => {
       // Create second category and second subcategory under cat2
       const cat2 = await Category.create({ name: "Home Textile" });
       const subCat2 = await SubCategory.create({
@@ -93,13 +93,13 @@ describe("Trader Module API Tests (/api/traders)", () => {
         name: "Curtains",
       });
 
-      // Mismatch: Sending categoryId (Garment Trader) with subCat2._id (Curtains)
+      // Mismatch: Sending categoryId (Garment Merchant) with subCat2._id (Curtains)
       const res = await request(app)
-        .post("/api/traders")
+        .post("/api/merchants")
         .set("Authorization", `Bearer ${adminToken}`)
         .send({
-          ...sampleTrader,
-          categoryId, // Garment Trader
+          ...sampleMerchant,
+          categoryId, // Garment Merchant
           subCategoryId: subCat2._id.toString(), // Curtains (under Home Textile)
         });
 
@@ -111,13 +111,13 @@ describe("Trader Module API Tests (/api/traders)", () => {
     });
   });
 
-  describe("GET /api/traders (List & Search)", () => {
+  describe("GET /api/merchants (List & Search)", () => {
     beforeEach(async () => {
       await request(app)
-        .post("/api/traders")
+        .post("/api/merchants")
         .set("Authorization", `Bearer ${adminToken}`)
         .send({
-          ...sampleTrader,
+          ...sampleMerchant,
           companyName: "ABC Garments",
           personName: "John",
           mobile: "9876543210",
@@ -126,10 +126,10 @@ describe("Trader Module API Tests (/api/traders)", () => {
         });
 
       await request(app)
-        .post("/api/traders")
+        .post("/api/merchants")
         .set("Authorization", `Bearer ${adminToken}`)
         .send({
-          ...sampleTrader,
+          ...sampleMerchant,
           companyName: "XYZ Textiles",
           personName: "Mike",
           mobile: "9123456789",
@@ -138,9 +138,9 @@ describe("Trader Module API Tests (/api/traders)", () => {
         });
     });
 
-    it("should fetch all traders populated with category and subCategory info", async () => {
+    it("should fetch all merchants populated with category and subCategory info", async () => {
       const res = await request(app)
-        .get("/api/traders")
+        .get("/api/merchants")
         .set("Authorization", `Bearer ${adminToken}`);
 
       expect(res.statusCode).toEqual(200);
@@ -150,9 +150,9 @@ describe("Trader Module API Tests (/api/traders)", () => {
       expect(res.body.data[0]).toHaveProperty("subCategory");
     });
 
-    it("should filter traders using search query parameter", async () => {
+    it("should filter merchants using search query parameter", async () => {
       const res = await request(app)
-        .get("/api/traders?search=XYZ")
+        .get("/api/merchants?search=XYZ")
         .set("Authorization", `Bearer ${adminToken}`);
 
       expect(res.statusCode).toEqual(200);

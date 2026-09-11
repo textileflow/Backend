@@ -5,7 +5,7 @@ const app = require("../src/app");
 const User = require("../src/models/Auth/auth");
 const Category = require("../src/models/Category/category");
 const SubCategory = require("../src/models/SubCategory/subCategory");
-const Trader = require("../src/models/Trader/trader");
+const Merchant = require("../src/models/Merchant/merchant");
 
 let mongoServer;
 let adminToken;
@@ -32,7 +32,7 @@ beforeEach(async () => {
   await User.deleteMany({});
   await Category.deleteMany({});
   await SubCategory.deleteMany({});
-  await Trader.deleteMany({});
+  await Merchant.deleteMany({});
 
   const adminRes = await request(app).post("/api/auth/register").send({
     name: "Admin User",
@@ -115,7 +115,7 @@ describe("SubCategory Module API Tests (/api/subcategories)", () => {
   });
 
   describe("DELETE /api/subcategories/:id", () => {
-    it("should delete sub-category if not in use by a Trader", async () => {
+    it("should delete sub-category if not in use by a Merchant", async () => {
       const subCat = await SubCategory.create({ categoryId, name: "Unused Sub" });
 
       const res = await request(app)
@@ -126,10 +126,10 @@ describe("SubCategory Module API Tests (/api/subcategories)", () => {
       expect(res.body.success).toBe(true);
     });
 
-    it("should reject deletion if sub-category is used by a Trader", async () => {
+    it("should reject deletion if sub-category is used by a Merchant", async () => {
       const subCat = await SubCategory.create({ categoryId, name: "Used Sub" });
 
-      await Trader.create({
+      await Merchant.create({
         companyName: "ABC Garments",
         personName: "John",
         mobile: "9999999999",
@@ -143,7 +143,7 @@ describe("SubCategory Module API Tests (/api/subcategories)", () => {
 
       expect(res.statusCode).toEqual(400);
       expect(res.body.success).toBe(false);
-      expect(res.body.message).toMatch(/associated with traders/i);
+      expect(res.body.message).toMatch(/associated with merchants/i);
     });
   });
 });

@@ -6,7 +6,7 @@ const morgan = require("morgan");
 const authRoutes = require("./routes/Auth/auth");
 const categoryRoutes = require("./routes/Category/category");
 const subCategoryRoutes = require("./routes/SubCategory/subCategory");
-const traderRoutes = require("./routes/Trader/trader");
+const merchantRoutes = require("./routes/Merchant/merchant");
 const {
   notFoundHandler,
   errorHandler,
@@ -60,7 +60,7 @@ app.get("/api/health", (req, res) => {
 app.use("/api/auth", authRoutes);
 app.use("/api/categories", categoryRoutes);
 app.use("/api/subcategories", subCategoryRoutes);
-app.use("/api/traders", traderRoutes);
+app.use("/api/merchants", merchantRoutes);
 
 // 7. Handle 404 routes
 app.use(notFoundHandler);

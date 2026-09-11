@@ -5,7 +5,7 @@ const app = require("../src/app");
 const User = require("../src/models/Auth/auth");
 const Category = require("../src/models/Category/category");
 const SubCategory = require("../src/models/SubCategory/subCategory");
-const Trader = require("../src/models/Trader/trader");
+const Merchant = require("../src/models/Merchant/merchant");
 
 let mongoServer;
 let adminToken;
@@ -32,7 +32,7 @@ beforeEach(async () => {
   await User.deleteMany({});
   await Category.deleteMany({});
   await SubCategory.deleteMany({});
-  await Trader.deleteMany({});
+  await Merchant.deleteMany({});
 
   // Create Admin
   const adminRes = await request(app).post("/api/auth/register").send({

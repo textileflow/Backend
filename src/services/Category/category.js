@@ -1,6 +1,6 @@
 const Category = require("../../models/Category/category");
 const SubCategory = require("../../models/SubCategory/subCategory");
-const Trader = require("../../models/Trader/trader");
+const Merchant = require("../../models/Merchant/merchant");
 const CustomError = require("../../utils/Common/customError");
 
 class CategoryService {
@@ -87,11 +87,11 @@ class CategoryService {
       );
     }
 
-    // Check if category is used by any Trader
-    const traderCount = await Trader.countDocuments({ categoryId: id });
-    if (traderCount > 0) {
+    // Check if category is used by any Merchant
+    const merchantCount = await Merchant.countDocuments({ categoryId: id });
+    if (merchantCount > 0) {
       throw new CustomError(
-        "Cannot delete category as it is currently associated with traders",
+        "Cannot delete category as it is currently associated with merchants",
         400
       );
     }

@@ -1,6 +1,6 @@
 const mongoose = require("mongoose");
 
-const traderSchema = new mongoose.Schema(
+const merchantSchema = new mongoose.Schema(
   {
     companyName: {
       type: String,
@@ -72,30 +72,30 @@ const traderSchema = new mongoose.Schema(
   }
 );
 
-// Format Trader object to populate category & subCategory cleanly
-traderSchema.methods.toJSON = function () {
-  const traderObj = this.toObject();
+// Format Merchant object to populate category & subCategory cleanly
+merchantSchema.methods.toJSON = function () {
+  const merchantObj = this.toObject();
 
-  if (traderObj.categoryId && typeof traderObj.categoryId === "object") {
-    traderObj.category = {
-      _id: traderObj.categoryId._id,
-      name: traderObj.categoryId.name,
+  if (merchantObj.categoryId && typeof merchantObj.categoryId === "object") {
+    merchantObj.category = {
+      _id: merchantObj.categoryId._id,
+      name: merchantObj.categoryId.name,
     };
-    delete traderObj.categoryId;
+    delete merchantObj.categoryId;
   }
 
-  if (traderObj.subCategoryId && typeof traderObj.subCategoryId === "object") {
-    traderObj.subCategory = {
-      _id: traderObj.subCategoryId._id,
-      name: traderObj.subCategoryId.name,
+  if (merchantObj.subCategoryId && typeof merchantObj.subCategoryId === "object") {
+    merchantObj.subCategory = {
+      _id: merchantObj.subCategoryId._id,
+      name: merchantObj.subCategoryId.name,
     };
-    delete traderObj.subCategoryId;
+    delete merchantObj.subCategoryId;
   }
 
-  delete traderObj.__v;
-  return traderObj;
+  delete merchantObj.__v;
+  return merchantObj;
 };
 
-const Trader = mongoose.model("Trader", traderSchema);
+const Merchant = mongoose.model("Merchant", merchantSchema);
 
-module.exports = Trader;
+module.exports = Merchant;

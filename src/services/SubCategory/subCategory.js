@@ -1,6 +1,6 @@
 const SubCategory = require("../../models/SubCategory/subCategory");
 const Category = require("../../models/Category/category");
-const Trader = require("../../models/Trader/trader");
+const Merchant = require("../../models/Merchant/merchant");
 const CustomError = require("../../utils/Common/customError");
 
 class SubCategoryService {
@@ -119,7 +119,7 @@ class SubCategoryService {
   }
 
   /**
-   * Delete SubCategory by ID (Prevent deletion if used by Trader)
+   * Delete SubCategory by ID (Prevent deletion if used by Merchant)
    */
   async deleteSubCategory(id) {
     const subCategory = await SubCategory.findById(id);
@@ -127,11 +127,11 @@ class SubCategoryService {
       throw new CustomError("Sub Category not found", 404);
     }
 
-    // Check if subCategory is used by any Trader
-    const traderCount = await Trader.countDocuments({ subCategoryId: id });
-    if (traderCount > 0) {
+    // Check if subCategory is used by any Merchant
+    const merchantCount = await Merchant.countDocuments({ subCategoryId: id });
+    if (merchantCount > 0) {
       throw new CustomError(
-        "Cannot delete sub-category as it is currently associated with traders",
+        "Cannot delete sub-category as it is currently associated with merchants",
         400
       );
     }
