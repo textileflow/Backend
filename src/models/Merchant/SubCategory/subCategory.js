@@ -1,5 +1,5 @@
 const mongoose = require("mongoose");
-const Counter = require("../Common/counter");
+const Counter = require("../../Common/counter");
 
 const subCategorySchema = new mongoose.Schema(
   {
@@ -13,7 +13,7 @@ const subCategorySchema = new mongoose.Schema(
     },
     name: {
       type: String,
-      required: [true, "Sub Category name is required"],
+      required: [true, "Sub-category name is required"],
       trim: true,
     },
     note: {
@@ -26,6 +26,9 @@ const subCategorySchema = new mongoose.Schema(
     timestamps: true,
   }
 );
+
+// Ensure compound index for unique sub-category name per category
+subCategorySchema.index({ categoryId: 1, name: 1 }, { unique: true });
 
 // Pre-save hook for auto-incrementing numeric subCategoryId (1, 2, 3...)
 subCategorySchema.pre("save", async function () {
@@ -41,16 +44,16 @@ subCategorySchema.pre("save", async function () {
 
 // Transform toJSON: exposes id as number (1, 2, 3...), hides _id, subCategoryId, __v, createdAt, updatedAt
 subCategorySchema.methods.toJSON = function () {
-  const subObj = this.toObject();
-  subObj.id = subObj.subCategoryId;
-  delete subObj._id;
-  delete subObj.subCategoryId;
-  delete subObj.__v;
-  delete subObj.createdAt;
-  delete subObj.updatedAt;
-  return subObj;
+  const subCatObj = this.toObject();
+  subCatObj.id = subCatObj.subCategoryId;
+  delete subCatObj._id;
+  delete subCatObj.subCategoryId;
+  delete subCatObj.__v;
+  delete subCatObj.createdAt;
+  delete subCatObj.updatedAt;
+  return subCatObj;
 };
 
-const SubCategory = mongoose.model("SubCategory", subCategorySchema);
+const SubCategory = mongoose.models.SubCategory || mongoose.model("SubCategory", subCategorySchema);
 
 module.exports = SubCategory;

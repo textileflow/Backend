@@ -1,9 +1,12 @@
 const express = require("express");
 const router = express.Router();
-const subCategoryController = require("../../controllers/SubCategory/subCategory");
-const { protect, authorizeRoles } = require("../../middleware/Auth/auth");
-const validate = require("../../middleware/Common/validate");
-const { subCategoryValidator } = require("../../utils/SubCategory/validators");
+const subCategoryController = require("../../../controllers/Merchant/SubCategory/subCategory");
+const { protect, authorizeRoles } = require("../../../middleware/Auth/auth");
+const validate = require("../../../middleware/Common/validate");
+const {
+  subCategoryValidator,
+  subCategoryUpdateValidator,
+} = require("../../../utils/Merchant/SubCategory/validators");
 
 // All routes require authentication
 router.use(protect);
@@ -25,7 +28,7 @@ router
   .route("/category/:categoryId")
   .get(
     authorizeRoles("admin", "manager", "staff"),
-    subCategoryController.getByCategory
+    subCategoryController.getAll
   );
 
 router
@@ -36,11 +39,10 @@ router
   )
   .put(
     authorizeRoles("admin", "manager"),
+    subCategoryUpdateValidator,
+    validate,
     subCategoryController.update
   )
-  .delete(
-    authorizeRoles("admin", "manager"),
-    subCategoryController.remove
-  );
+  .delete(authorizeRoles("admin"), subCategoryController.remove);
 
 module.exports = router;

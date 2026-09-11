@@ -1,5 +1,5 @@
-const categoryService = require("../../services/Category/category");
-const { sendSuccess } = require("../../utils/Common/apiResponse");
+const categoryService = require("../../../services/Merchant/Category/category");
+const { sendSuccess } = require("../../../utils/Common/apiResponse");
 
 /**
  * @desc    Create a new category
@@ -8,8 +8,7 @@ const { sendSuccess } = require("../../utils/Common/apiResponse");
  */
 const create = async (req, res, next) => {
   try {
-    const { name, note } = req.body;
-    const category = await categoryService.createCategory({ name, note });
+    const category = await categoryService.createCategory(req.body);
     return sendSuccess(res, 201, "Category created successfully", category);
   } catch (error) {
     next(error);
@@ -17,45 +16,50 @@ const create = async (req, res, next) => {
 };
 
 /**
- * @desc    Get all categories
+ * @desc    Get all categories with pagination & search (?page=1&per_page=10&search=)
  * @route   GET /api/categories
  * @access  Private (ADMIN, MANAGER, STAFF)
  */
 const getAll = async (req, res, next) => {
   try {
-    const categories = await categoryService.getAllCategories();
-    return sendSuccess(res, 200, "Categories fetched successfully", categories);
+    const { categories, pagination } = await categoryService.getAllCategories(req.query);
+    return sendSuccess(
+      res,
+      200,
+      "Categories retrieved successfully",
+      categories,
+      pagination
+    );
   } catch (error) {
     next(error);
   }
 };
 
 /**
- * @desc    Get single category by ID
+ * @desc    Get single category by numeric categoryId
  * @route   GET /api/categories/:id
  * @access  Private (ADMIN, MANAGER, STAFF)
  */
 const getById = async (req, res, next) => {
   try {
     const category = await categoryService.getCategoryById(req.params.id);
-    return sendSuccess(res, 200, "Category fetched successfully", category);
+    return sendSuccess(res, 200, "Category retrieved successfully", category);
   } catch (error) {
     next(error);
   }
 };
 
 /**
- * @desc    Update category by ID
+ * @desc    Update category by numeric categoryId
  * @route   PUT /api/categories/:id
  * @access  Private (ADMIN, MANAGER)
  */
 const update = async (req, res, next) => {
   try {
-    const { name, note } = req.body;
-    const category = await categoryService.updateCategory(req.params.id, {
-      name,
-      note,
-    });
+    const category = await categoryService.updateCategory(
+      req.params.id,
+      req.body
+    );
     return sendSuccess(res, 200, "Category updated successfully", category);
   } catch (error) {
     next(error);
@@ -63,14 +67,14 @@ const update = async (req, res, next) => {
 };
 
 /**
- * @desc    Delete category by ID
+ * @desc    Delete category by numeric categoryId
  * @route   DELETE /api/categories/:id
- * @access  Private (ADMIN, MANAGER)
+ * @access  Private (ADMIN)
  */
 const remove = async (req, res, next) => {
   try {
-    await categoryService.deleteCategory(req.params.id);
-    return sendSuccess(res, 200, "Category deleted successfully");
+    const result = await categoryService.deleteCategory(req.params.id);
+    return sendSuccess(res, 200, "Category deleted successfully", result);
   } catch (error) {
     next(error);
   }

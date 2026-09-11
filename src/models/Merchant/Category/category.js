@@ -1,5 +1,5 @@
 const mongoose = require("mongoose");
-const Counter = require("../Common/counter");
+const Counter = require("../../Common/counter");
 
 const categorySchema = new mongoose.Schema(
   {
@@ -11,6 +11,7 @@ const categorySchema = new mongoose.Schema(
       type: String,
       required: [true, "Category name is required"],
       trim: true,
+      unique: true,
     },
     note: {
       type: String,
@@ -37,16 +38,16 @@ categorySchema.pre("save", async function () {
 
 // Transform toJSON: exposes id as number (1, 2, 3...), hides _id, categoryId, __v, createdAt, updatedAt
 categorySchema.methods.toJSON = function () {
-  const catObj = this.toObject();
-  catObj.id = catObj.categoryId;
-  delete catObj._id;
-  delete catObj.categoryId;
-  delete catObj.__v;
-  delete catObj.createdAt;
-  delete catObj.updatedAt;
-  return catObj;
+  const categoryObj = this.toObject();
+  categoryObj.id = categoryObj.categoryId;
+  delete categoryObj._id;
+  delete categoryObj.categoryId;
+  delete categoryObj.__v;
+  delete categoryObj.createdAt;
+  delete categoryObj.updatedAt;
+  return categoryObj;
 };
 
-const Category = mongoose.model("Category", categorySchema);
+const Category = mongoose.models.Category || mongoose.model("Category", categorySchema);
 
 module.exports = Category;

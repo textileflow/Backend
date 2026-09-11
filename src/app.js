@@ -4,8 +4,8 @@ const helmet = require("helmet");
 const morgan = require("morgan");
 
 const authRoutes = require("./routes/Auth/auth");
-const categoryRoutes = require("./routes/Category/category");
-const subCategoryRoutes = require("./routes/SubCategory/subCategory");
+const categoryRoutes = require("./routes/Merchant/Category/category");
+const subCategoryRoutes = require("./routes/Merchant/SubCategory/subCategory");
 const merchantRoutes = require("./routes/Merchant/merchant");
 const uploadRoutes = require("./routes/Upload/upload");
 const {

@@ -1,8 +1,12 @@
 const Merchant = require("../../models/Merchant/merchant");
-const Category = require("../../models/Category/category");
-const SubCategory = require("../../models/SubCategory/subCategory");
+const Category = require("../../models/Merchant/Category/category");
+const SubCategory = require("../../models/Merchant/SubCategory/subCategory");
 const CustomError = require("../../utils/Common/customError");
 const { uploadToCloudinary } = require("../../config/cloudinary");
+const {
+  getPaginationQueryParams,
+  buildPaginationData,
+} = require("../../utils/Common/pagination");
 
 /**
  * Format merchant object safely with populated Category & SubCategory details
@@ -76,7 +80,7 @@ class MerchantService {
     if (files && files.gstCertificate && files.gstCertificate[0]) {
       const result = await uploadToCloudinary(
         files.gstCertificate[0].buffer,
-        "merchants/gst"
+        "upload-single"
       );
       gstCertificateUrl = result.path;
     }
@@ -84,7 +88,7 @@ class MerchantService {
     if (files && files.panCardImage && files.panCardImage[0]) {
       const result = await uploadToCloudinary(
         files.panCardImage[0].buffer,
-        "merchants/pancard"
+        "upload-single"
       );
       panCardImageUrl = result.path;
     }
@@ -109,9 +113,11 @@ class MerchantService {
   }
 
   /**
-   * Get all Merchants with filtering (categoryId, subCategoryId) & search
+   * Get all Merchants with filtering (categoryId, subCategoryId), search & pagination
    */
-  async getAllMerchants({ categoryId, subCategoryId, search }) {
+  async getAllMerchants(queryParams = {}) {
+    const { page, limit, skip, search } = getPaginationQueryParams(queryParams);
+    const { categoryId, subCategoryId } = queryParams;
     const query = {};
 
     if (categoryId) {
@@ -124,8 +130,8 @@ class MerchantService {
       if (!isNaN(numSubCatId)) query.subCategoryId = numSubCatId;
     }
 
-    if (search && search.trim()) {
-      const searchRegex = new RegExp(search.trim(), "i");
+    if (search) {
+      const searchRegex = new RegExp(search, "i");
       query.$or = [
         { companyName: searchRegex },
         { personName: searchRegex },
@@ -133,8 +139,22 @@ class MerchantService {
       ];
     }
 
-    const merchants = await Merchant.find(query).sort({ merchantId: 1 });
-    return await Promise.all(merchants.map((m) => formatMerchant(m)));
+    const totalCount = await Merchant.countDocuments(query);
+    const merchants = await Merchant.find(query)
+      .sort({ merchantId: 1 })
+      .skip(skip)
+      .limit(limit);
+
+    const formattedMerchants = await Promise.all(
+      merchants.map((m) => formatMerchant(m))
+    );
+
+    const pagination = buildPaginationData(totalCount, page, limit);
+
+    return {
+      merchants: formattedMerchants,
+      pagination,
+    };
   }
 
   /**
@@ -195,7 +215,7 @@ class MerchantService {
     if (files && files.gstCertificate && files.gstCertificate[0]) {
       const result = await uploadToCloudinary(
         files.gstCertificate[0].buffer,
-        "merchants/gst"
+        "upload-single"
       );
       merchant.gstCertificate = result.path;
     } else if (updateData.gstCertificate !== undefined) {
@@ -205,7 +225,7 @@ class MerchantService {
     if (files && files.panCardImage && files.panCardImage[0]) {
       const result = await uploadToCloudinary(
         files.panCardImage[0].buffer,
-        "merchants/pancard"
+        "upload-single"
       );
       merchant.panCardImage = result.path;
     } else if (updateData.panCardImage !== undefined) {

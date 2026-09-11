@@ -99,6 +99,6 @@ merchantSchema.methods.toJSON = function () {
   return merchantObj;
 };
 
-const Merchant = mongoose.model("Merchant", merchantSchema);
+const Merchant = mongoose.models.Merchant || mongoose.model("Merchant", merchantSchema);
 
 module.exports = Merchant;

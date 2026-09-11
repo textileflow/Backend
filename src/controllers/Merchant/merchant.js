@@ -2,42 +2,33 @@ const merchantService = require("../../services/Merchant/merchant");
 const { sendSuccess } = require("../../utils/Common/apiResponse");
 
 /**
- * @desc    Create a new merchant (supports text data and file uploads for gstCertificate & panCardImage)
+ * @desc    Create a new Merchant
  * @route   POST /api/merchants
  * @access  Private (ADMIN, MANAGER)
  */
 const create = async (req, res, next) => {
   try {
     const merchant = await merchantService.createMerchant(req.body, req.files);
-    return sendSuccess(
-      res,
-      201,
-      "Merchant created successfully",
-      merchant
-    );
+    return sendSuccess(res, 201, "Merchant created successfully", merchant);
   } catch (error) {
     next(error);
   }
 };
 
 /**
- * @desc    Get all merchants (with categoryId, subCategoryId & search filtering)
+ * @desc    Get all Merchants with pagination & search (?page=1&per_page=10&search=&categoryId=&subCategoryId=)
  * @route   GET /api/merchants
  * @access  Private (ADMIN, MANAGER, STAFF)
  */
 const getAll = async (req, res, next) => {
   try {
-    const { categoryId, subCategoryId, search } = req.query;
-    const merchants = await merchantService.getAllMerchants({
-      categoryId,
-      subCategoryId,
-      search,
-    });
+    const { merchants, pagination } = await merchantService.getAllMerchants(req.query);
     return sendSuccess(
       res,
       200,
-      "Merchants fetched successfully",
-      merchants
+      "Merchants retrieved successfully",
+      merchants,
+      pagination
     );
   } catch (error) {
     next(error);
@@ -45,26 +36,21 @@ const getAll = async (req, res, next) => {
 };
 
 /**
- * @desc    Get single merchant by ID
+ * @desc    Get single Merchant by numeric ID
  * @route   GET /api/merchants/:id
  * @access  Private (ADMIN, MANAGER, STAFF)
  */
 const getById = async (req, res, next) => {
   try {
     const merchant = await merchantService.getMerchantById(req.params.id);
-    return sendSuccess(
-      res,
-      200,
-      "Merchant fetched successfully",
-      merchant
-    );
+    return sendSuccess(res, 200, "Merchant retrieved successfully", merchant);
   } catch (error) {
     next(error);
   }
 };
 
 /**
- * @desc    Update merchant by ID (supports file uploads for gstCertificate & panCardImage)
+ * @desc    Update Merchant by numeric ID
  * @route   PUT /api/merchants/:id
  * @access  Private (ADMIN, MANAGER)
  */
@@ -75,26 +61,21 @@ const update = async (req, res, next) => {
       req.body,
       req.files
     );
-    return sendSuccess(
-      res,
-      200,
-      "Merchant updated successfully",
-      merchant
-    );
+    return sendSuccess(res, 200, "Merchant updated successfully", merchant);
   } catch (error) {
     next(error);
   }
 };
 
 /**
- * @desc    Delete merchant by ID
+ * @desc    Delete Merchant by numeric ID
  * @route   DELETE /api/merchants/:id
- * @access  Private (ADMIN, MANAGER)
+ * @access  Private (ADMIN)
  */
 const remove = async (req, res, next) => {
   try {
-    await merchantService.deleteMerchant(req.params.id);
-    return sendSuccess(res, 200, "Merchant deleted successfully");
+    const result = await merchantService.deleteMerchant(req.params.id);
+    return sendSuccess(res, 200, "Merchant deleted successfully", result);
   } catch (error) {
     next(error);
   }
