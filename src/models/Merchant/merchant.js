@@ -43,6 +43,12 @@ const merchantSchema = new mongoose.Schema(
       trim: true,
       default: "",
     },
+    gstNumber: {
+      type: String,
+      trim: true,
+      uppercase: true,
+      default: "",
+    },
     gstCertificate: {
       type: mongoose.Schema.Types.Mixed,
       default: null,
@@ -50,6 +56,7 @@ const merchantSchema = new mongoose.Schema(
     panCard: {
       type: String,
       trim: true,
+      uppercase: true,
       default: "",
     },
     panCardImage: {
@@ -61,7 +68,7 @@ const merchantSchema = new mongoose.Schema(
       required: [true, "Category ID is required"],
     },
     subCategoryId: {
-      type: Number,
+      type: [Number],
       required: [true, "Sub Category ID is required"],
     },
     note: {

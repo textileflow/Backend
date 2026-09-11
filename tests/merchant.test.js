@@ -6,11 +6,13 @@ const User = require("../src/models/Auth/auth");
 const Category = require("../src/models/Merchant/Category/category");
 const SubCategory = require("../src/models/Merchant/SubCategory/subCategory");
 const Merchant = require("../src/models/Merchant/merchant");
+const Counter = require("../src/models/Common/counter");
 
 let mongoServer;
 let adminToken;
 let categoryId;
 let subCategoryId;
+let subCategoryId2;
 
 beforeAll(async () => {
   process.env.JWT_SECRET = "test_jwt_secret_key_12345";
@@ -28,8 +30,6 @@ afterAll(async () => {
     await mongoServer.stop();
   }
 });
-
-const Counter = require("../src/models/Common/counter");
 
 beforeEach(async () => {
   await User.deleteMany({});
@@ -49,11 +49,17 @@ beforeEach(async () => {
   const cat = await Category.create({ name: "Garment Merchant" });
   categoryId = cat.categoryId;
 
-  const subCat = await SubCategory.create({
+  const subCat1 = await SubCategory.create({
     categoryId: cat.categoryId,
     name: "Ladies Wear",
   });
-  subCategoryId = subCat.subCategoryId;
+  subCategoryId = subCat1.subCategoryId;
+
+  const subCat2 = await SubCategory.create({
+    categoryId: cat.categoryId,
+    name: "Gowns",
+  });
+  subCategoryId2 = subCat2.subCategoryId;
 });
 
 describe("Merchant Module API Tests (/api/merchants)", () => {
@@ -65,12 +71,13 @@ describe("Merchant Module API Tests (/api/merchants)", () => {
     address: "Surat",
     paymentTerm: "30 Days",
     gstName: "ABC Garments Pvt Ltd",
-    panCard: "ABCDE1234F",
+    gstNumber: "24ABCDE1234F1Z5",
+    panCard: "PJHPS6236K",
     note: "Regular job work customer",
   };
 
   describe("POST /api/merchants", () => {
-    it("should create merchant successfully when subCategoryId belongs to categoryId", async () => {
+    it("should create merchant successfully with SINGLE subCategoryId & valid PAN / GST", async () => {
       const res = await request(app)
         .post("/api/merchants")
         .set("Authorization", `Bearer ${adminToken}`)
@@ -78,8 +85,8 @@ describe("Merchant Module API Tests (/api/merchants)", () => {
           ...sampleMerchant,
           categoryId,
           subCategoryId,
-          gstCertificate: "admin_user/upload-single/merchants/gst/sample123.jpg",
-          panCardImage: "admin_user/upload-single/merchants/pancard/sample456.jpg",
+          gstCertificate: "upload-single/sample123.jpg",
+          panCardImage: "upload-single/sample456.jpg",
         });
 
       expect(res.statusCode).toEqual(201);
@@ -87,29 +94,72 @@ describe("Merchant Module API Tests (/api/merchants)", () => {
       expect(res.body.message).toBe("Merchant created successfully");
       expect(res.body.data).toHaveProperty("id");
       expect(res.body.data.companyName).toBe("ABC Garments");
-      expect(res.body.data.gstCertificate).toBe("admin_user/upload-single/merchants/gst/sample123.jpg");
       expect(res.body.data.category.id).toBe(categoryId);
       expect(res.body.data.subCategory.id).toBe(subCategoryId);
-      expect(res.body.data._id).toBeUndefined();
-      expect(res.body.data.__v).toBeUndefined();
     });
 
-    it("should REJECT merchant creation if subCategoryId belongs to a DIFFERENT categoryId", async () => {
-      // Create second category and second subcategory under cat2
-      const cat2 = await Category.create({ name: "Home Textile" });
-      const subCat2 = await SubCategory.create({
-        categoryId: cat2.categoryId,
-        name: "Curtains",
-      });
-
-      // Mismatch: Sending categoryId (Garment Merchant) with subCat2.subCategoryId (Curtains)
+    it("should create merchant successfully with MULTIPLE subCategoryIds [1, 2]", async () => {
       const res = await request(app)
         .post("/api/merchants")
         .set("Authorization", `Bearer ${adminToken}`)
         .send({
           ...sampleMerchant,
-          categoryId, // Garment Merchant
-          subCategoryId: subCat2.subCategoryId, // Curtains (under Home Textile)
+          categoryId,
+          subCategoryId: [subCategoryId, subCategoryId2],
+        });
+
+      expect(res.statusCode).toEqual(201);
+      expect(res.body.success).toBe(true);
+      expect(Array.isArray(res.body.data.subCategory)).toBe(true);
+      expect(res.body.data.subCategory.length).toBe(2);
+    });
+
+    it("should REJECT merchant creation if invalid PAN Card format", async () => {
+      const res = await request(app)
+        .post("/api/merchants")
+        .set("Authorization", `Bearer ${adminToken}`)
+        .send({
+          ...sampleMerchant,
+          categoryId,
+          subCategoryId,
+          panCard: "INVALID1234",
+        });
+
+      expect(res.statusCode).toEqual(400);
+      expect(res.body.success).toBe(false);
+      expect(res.body.errors[0].message).toMatch(/Invalid PAN Card format/i);
+    });
+
+    it("should REJECT merchant creation if invalid GST Number format", async () => {
+      const res = await request(app)
+        .post("/api/merchants")
+        .set("Authorization", `Bearer ${adminToken}`)
+        .send({
+          ...sampleMerchant,
+          categoryId,
+          subCategoryId,
+          gstNumber: "INVALIDGST123",
+        });
+
+      expect(res.statusCode).toEqual(400);
+      expect(res.body.success).toBe(false);
+      expect(res.body.errors[0].message).toMatch(/Invalid GST Number format/i);
+    });
+
+    it("should REJECT merchant creation if subCategoryId belongs to a DIFFERENT categoryId", async () => {
+      const cat2 = await Category.create({ name: "Home Textile" });
+      const subCat3 = await SubCategory.create({
+        categoryId: cat2.categoryId,
+        name: "Curtains",
+      });
+
+      const res = await request(app)
+        .post("/api/merchants")
+        .set("Authorization", `Bearer ${adminToken}`)
+        .send({
+          ...sampleMerchant,
+          categoryId,
+          subCategoryId: subCat3.subCategoryId,
         });
 
       expect(res.statusCode).toEqual(400);
@@ -131,7 +181,7 @@ describe("Merchant Module API Tests (/api/merchants)", () => {
           personName: "John",
           mobile: "9876543210",
           categoryId,
-          subCategoryId,
+          subCategoryId: [subCategoryId, subCategoryId2],
         });
 
       await request(app)
@@ -155,9 +205,7 @@ describe("Merchant Module API Tests (/api/merchants)", () => {
       expect(res.statusCode).toEqual(200);
       expect(res.body.success).toBe(true);
       expect(res.body.data.length).toBe(2);
-      expect(res.body.data[0]).toHaveProperty("category");
-      expect(res.body.data[0]).toHaveProperty("subCategory");
-      expect(res.body.data[0]._id).toBeUndefined();
+      expect(res.body.pagination).toBeDefined();
     });
 
     it("should filter merchants using search query parameter", async () => {

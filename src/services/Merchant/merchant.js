@@ -9,6 +9,24 @@ const {
 } = require("../../utils/Common/pagination");
 
 /**
+ * Helper to normalize single, array, or string subCategoryId input into an array of numbers
+ */
+const normalizeSubCategoryIds = (input) => {
+  if (input === undefined || input === null) return [];
+  let items = [];
+  if (Array.isArray(input)) {
+    items = input;
+  } else if (typeof input === "string" && input.includes(",")) {
+    items = input.split(",");
+  } else {
+    items = [input];
+  }
+  return items
+    .map((item) => Number(String(item).trim()))
+    .filter((num) => !isNaN(num));
+};
+
+/**
  * Format merchant object safely with populated Category & SubCategory details
  */
 const formatMerchant = async (merchant) => {
@@ -16,7 +34,10 @@ const formatMerchant = async (merchant) => {
   const obj = typeof merchant.toJSON === "function" ? merchant.toJSON() : { ...merchant };
 
   const category = await Category.findOne({ categoryId: obj.categoryId });
-  const subCategory = await SubCategory.findOne({ subCategoryId: obj.subCategoryId });
+  
+  const rawSubCatIds = obj.subCategoryId || obj.subCategoryIds;
+  const subCategoryIds = normalizeSubCategoryIds(rawSubCatIds);
+  const subCategories = await SubCategory.find({ subCategoryId: { $in: subCategoryIds } });
 
   if (category) {
     obj.category = {
@@ -25,11 +46,16 @@ const formatMerchant = async (merchant) => {
     };
   }
 
-  if (subCategory) {
-    obj.subCategory = {
-      id: subCategory.subCategoryId,
-      name: subCategory.name,
-    };
+  const formattedSubCategories = subCategories.map((sc) => ({
+    id: sc.subCategoryId,
+    name: sc.name,
+  }));
+
+  // Keep single object if only 1 subcategory for legacy format, or array if multiple
+  if (formattedSubCategories.length === 1) {
+    obj.subCategory = formattedSubCategories[0];
+  } else {
+    obj.subCategory = formattedSubCategories;
   }
 
   delete obj.categoryId;
@@ -40,17 +66,21 @@ const formatMerchant = async (merchant) => {
 
 class MerchantService {
   /**
-   * Create a new Merchant with optional GST Certificate & PAN Card file upload
+   * Create a new Merchant with support for multiple subCategoryIds & GST / PAN validation
    */
   async createMerchant(merchantData, files = {}) {
     const numCategoryId = Number(merchantData.categoryId);
-    const numSubCategoryId = Number(merchantData.subCategoryId);
+    const subCatIds = normalizeSubCategoryIds(
+      merchantData.subCategoryId !== undefined
+        ? merchantData.subCategoryId
+        : merchantData.subCategoryIds
+    );
 
     if (isNaN(numCategoryId)) {
       throw new CustomError("Invalid Category ID", 400);
     }
-    if (isNaN(numSubCategoryId)) {
-      throw new CustomError("Invalid Sub Category ID", 400);
+    if (subCatIds.length === 0) {
+      throw new CustomError("Invalid Sub Category ID(s)", 400);
     }
 
     // 1. Verify Category exists
@@ -59,21 +89,26 @@ class MerchantService {
       throw new CustomError("Selected Category does not exist", 404);
     }
 
-    // 2. Verify Sub Category exists
-    const subCategory = await SubCategory.findOne({ subCategoryId: numSubCategoryId });
-    if (!subCategory) {
-      throw new CustomError("Selected Sub Category does not exist", 404);
+    // 2. Verify all Sub Categories exist
+    const subCategories = await SubCategory.find({
+      subCategoryId: { $in: subCatIds },
+    });
+
+    if (subCategories.length !== new Set(subCatIds).size) {
+      throw new CustomError("One or more selected Sub Categories do not exist", 404);
     }
 
-    // 3. Verify Sub Category belongs to selected Category
-    if (subCategory.categoryId !== numCategoryId) {
-      throw new CustomError(
-        "Sub category does not belong to selected category",
-        400
-      );
+    // 3. Verify all Sub Categories belong to selected Category
+    for (const sc of subCategories) {
+      if (sc.categoryId !== numCategoryId) {
+        throw new CustomError(
+          "Sub category does not belong to selected category",
+          400
+        );
+      }
     }
 
-    // 4. Process file uploads directly to Cloudinary (No local disk storage)
+    // 4. Process file uploads directly to Cloudinary
     let gstCertificateUrl = merchantData.gstCertificate || null;
     let panCardImageUrl = merchantData.panCardImage || null;
 
@@ -101,11 +136,16 @@ class MerchantService {
       address: merchantData.address ? merchantData.address.trim() : "",
       paymentTerm: merchantData.paymentTerm ? merchantData.paymentTerm.trim() : "",
       gstName: merchantData.gstName ? merchantData.gstName.trim() : "",
+      gstNumber: merchantData.gstNumber
+        ? merchantData.gstNumber.trim().toUpperCase()
+        : merchantData.gstNo
+        ? merchantData.gstNo.trim().toUpperCase()
+        : "",
       gstCertificate: gstCertificateUrl,
-      panCard: merchantData.panCard ? merchantData.panCard.trim() : "",
+      panCard: merchantData.panCard ? merchantData.panCard.trim().toUpperCase() : "",
       panCardImage: panCardImageUrl,
       categoryId: numCategoryId,
-      subCategoryId: numSubCategoryId,
+      subCategoryId: subCatIds,
       note: merchantData.note ? merchantData.note.trim() : "",
     });
 
@@ -126,8 +166,10 @@ class MerchantService {
     }
 
     if (subCategoryId) {
-      const numSubCatId = Number(subCategoryId);
-      if (!isNaN(numSubCatId)) query.subCategoryId = numSubCatId;
+      const subCatIds = normalizeSubCategoryIds(subCategoryId);
+      if (subCatIds.length > 0) {
+        query.subCategoryId = { $in: subCatIds };
+      }
     }
 
     if (search) {
@@ -136,6 +178,8 @@ class MerchantService {
         { companyName: searchRegex },
         { personName: searchRegex },
         { mobile: searchRegex },
+        { panCard: searchRegex },
+        { gstNumber: searchRegex },
       ];
     }
 
@@ -175,7 +219,7 @@ class MerchantService {
   }
 
   /**
-   * Update Merchant by numeric ID with optional file upload
+   * Update Merchant by numeric ID with support for multiple subCategoryIds
    */
   async updateMerchant(id, updateData, files = {}) {
     const numericId = Number(id);
@@ -188,26 +232,43 @@ class MerchantService {
       throw new CustomError("Merchant not found", 404);
     }
 
-    const targetCategoryId = updateData.categoryId !== undefined ? Number(updateData.categoryId) : merchant.categoryId;
-    const targetSubCategoryId = updateData.subCategoryId !== undefined ? Number(updateData.subCategoryId) : merchant.subCategoryId;
+    const targetCategoryId =
+      updateData.categoryId !== undefined
+        ? Number(updateData.categoryId)
+        : merchant.categoryId;
+
+    const rawSubCatIds =
+      updateData.subCategoryId !== undefined
+        ? updateData.subCategoryId
+        : updateData.subCategoryIds;
+
+    const targetSubCatIds =
+      rawSubCatIds !== undefined
+        ? normalizeSubCategoryIds(rawSubCatIds)
+        : normalizeSubCategoryIds(merchant.subCategoryId);
 
     // Check relationship validation if category or subCategory changes
-    if (updateData.categoryId !== undefined || updateData.subCategoryId !== undefined) {
+    if (updateData.categoryId !== undefined || rawSubCatIds !== undefined) {
       const category = await Category.findOne({ categoryId: targetCategoryId });
       if (!category) {
         throw new CustomError("Selected Category does not exist", 404);
       }
 
-      const subCategory = await SubCategory.findOne({ subCategoryId: targetSubCategoryId });
-      if (!subCategory) {
-        throw new CustomError("Selected Sub Category does not exist", 404);
+      const subCategories = await SubCategory.find({
+        subCategoryId: { $in: targetSubCatIds },
+      });
+
+      if (subCategories.length !== new Set(targetSubCatIds).size) {
+        throw new CustomError("One or more selected Sub Categories do not exist", 404);
       }
 
-      if (subCategory.categoryId !== targetCategoryId) {
-        throw new CustomError(
-          "Sub category does not belong to selected category",
-          400
-        );
+      for (const sc of subCategories) {
+        if (sc.categoryId !== targetCategoryId) {
+          throw new CustomError(
+            "Sub category does not belong to selected category",
+            400
+          );
+        }
       }
     }
 
@@ -244,10 +305,12 @@ class MerchantService {
       merchant.paymentTerm = updateData.paymentTerm ? updateData.paymentTerm.trim() : "";
     if (updateData.gstName !== undefined)
       merchant.gstName = updateData.gstName ? updateData.gstName.trim() : "";
+    if (updateData.gstNumber !== undefined)
+      merchant.gstNumber = updateData.gstNumber ? updateData.gstNumber.trim().toUpperCase() : "";
     if (updateData.panCard !== undefined)
-      merchant.panCard = updateData.panCard ? updateData.panCard.trim() : "";
+      merchant.panCard = updateData.panCard ? updateData.panCard.trim().toUpperCase() : "";
     if (updateData.categoryId !== undefined) merchant.categoryId = targetCategoryId;
-    if (updateData.subCategoryId !== undefined) merchant.subCategoryId = targetSubCategoryId;
+    if (rawSubCatIds !== undefined) merchant.subCategoryId = targetSubCatIds;
     if (updateData.note !== undefined)
       merchant.note = updateData.note ? updateData.note.trim() : "";
 
