@@ -82,6 +82,22 @@ const vendorValidator = [
   body("address").optional().trim(),
 
   body("note").optional().trim(),
+
+  body("vendorTypeId")
+    .optional()
+    .custom((val, { req }) => {
+      const input = val !== undefined ? val : req.body.vendorType;
+      if (input !== undefined && input !== null && input !== "") {
+        if (Array.isArray(input)) {
+          if (input.some((i) => isNaN(Number(i)))) {
+            throw new Error("vendorTypeId must be a number or an array of numbers");
+          }
+        } else if (isNaN(Number(input)) && typeof input !== "string") {
+          throw new Error("vendorTypeId must be a number or an array of numbers");
+        }
+      }
+      return true;
+    }),
 ];
 
 const statusValidator = [

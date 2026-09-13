@@ -1,4 +1,5 @@
 const Vendor = require("../../../models/Purchase/Vendor/vendor");
+const VendorType = require("../../../models/Purchase/Vendor/Vendor-type/vendor-type");
 const ThreadBrand = require("../../../models/Material/threadBrand");
 const CustomError = require("../../../utils/Common/customError");
 const { uploadToCloudinary } = require("../../../config/cloudinary");
@@ -6,6 +7,24 @@ const {
   getPaginationQueryParams,
   buildPaginationData,
 } = require("../../../utils/Common/pagination");
+
+const parseVendorTypeIds = (input) => {
+  if (input === undefined || input === null || input === "") {
+    return [];
+  }
+  let arr = input;
+  if (typeof input === "string") {
+    try {
+      arr = JSON.parse(input);
+    } catch (e) {
+      arr = input.split(",").map((s) => s.trim());
+    }
+  }
+  if (!Array.isArray(arr)) {
+    arr = [arr];
+  }
+  return arr.map((item) => Number(item)).filter((num) => !isNaN(num));
+};
 
 const parsePaymentTerm = (inputTerm) => {
   if (inputTerm === undefined || inputTerm === null || inputTerm === "") {
@@ -28,6 +47,31 @@ const parsePaymentTerm = (inputTerm) => {
     return match || `${num} Days`;
   }
   return str;
+};
+
+/**
+ * Format vendor object safely with populated VendorType details array
+ */
+const formatVendor = async (vendor) => {
+  if (!vendor) return {};
+  const obj = typeof vendor.toJSON === "function" ? vendor.toJSON() : { ...vendor };
+
+  const rawTypeIds = obj.vendorTypeId || obj.vendorType || [];
+  const typeIds = Array.isArray(rawTypeIds) ? rawTypeIds : [rawTypeIds];
+
+  if (typeIds.length > 0) {
+    const vendorTypes = await VendorType.find({ vendorTypeId: { $in: typeIds } });
+    obj.vendorType = vendorTypes.map((vt) => ({
+      id: vt.vendorTypeId,
+      name: vt.name,
+    }));
+  } else {
+    obj.vendorType = [];
+  }
+
+  delete obj.vendorTypeId;
+
+  return obj;
 };
 
 class VendorService {
@@ -66,6 +110,27 @@ class VendorService {
       panImgUrl = result.path;
     }
 
+    const rawVendorType =
+      data.vendorTypeId !== undefined
+        ? data.vendorTypeId
+        : data.vendorType !== undefined
+        ? data.vendorType
+        : data.vendorTypes;
+    const vendorTypeIds = parseVendorTypeIds(rawVendorType);
+
+    if (vendorTypeIds.length > 0) {
+      const validTypesCount = await VendorType.countDocuments({
+        vendorTypeId: { $in: vendorTypeIds },
+        status: "Active",
+      });
+      if (validTypesCount !== vendorTypeIds.length) {
+        throw new CustomError(
+          "One or more invalid or inactive Vendor Type IDs provided",
+          400
+        );
+      }
+    }
+
     const vendor = await Vendor.create({
       vendorCode: data.vendorCode
         ? data.vendorCode.trim().toUpperCase()
@@ -81,21 +146,33 @@ class VendorService {
       paymentTerm: term,
       address: data.address ? data.address.trim() : "",
       note: data.note ? data.note.trim() : "",
+      vendorTypeId: vendorTypeIds,
       status: data.status || "Active",
     });
 
-    return vendor;
+    return await formatVendor(vendor);
   }
 
   async getAllVendors(queryParams = {}) {
     const { page, limit, skip, search, status } = getPaginationQueryParams(queryParams);
-    const { paymentTerm } = queryParams;
+    const { paymentTerm, vendorType, vendorTypeId } = queryParams;
     const query = {};
 
     if (status) {
       query.status = new RegExp(`^${status}$`, "i");
     }
     if (paymentTerm) query.paymentTerm = paymentTerm;
+
+    const rawType =
+      queryParams.vendorType !== undefined
+        ? queryParams.vendorType
+        : queryParams.vendorTypeId;
+    if (rawType) {
+      const typeIds = parseVendorTypeIds(rawType);
+      if (typeIds.length > 0) {
+        query.vendorTypeId = { $in: typeIds };
+      }
+    }
 
     if (search) {
       const searchRegex = new RegExp(search, "i");
@@ -114,9 +191,12 @@ class VendorService {
       .sort({ vendorId: 1 })
       .skip(skip)
       .limit(limit);
+    const formattedVendors = await Promise.all(
+      vendors.map((v) => formatVendor(v))
+    );
     const pagination = buildPaginationData(totalCount, page, limit);
 
-    return { vendors, pagination };
+    return { vendors: formattedVendors, pagination };
   }
 
   async getVendorById(id) {
@@ -125,7 +205,7 @@ class VendorService {
 
     const vendor = await Vendor.findOne({ vendorId: numericId });
     if (!vendor) throw new CustomError("Vendor not found", 404);
-    return vendor;
+    return await formatVendor(vendor);
   }
 
   async updateVendor(id, updateData, files = {}) {
@@ -172,6 +252,34 @@ class VendorService {
       vendor.note = updateData.note.trim();
     if (updateData.status) vendor.status = updateData.status;
 
+    if (
+      updateData.vendorTypeId !== undefined ||
+      updateData.vendorType !== undefined ||
+      updateData.vendorTypes !== undefined
+    ) {
+      const rawVendorType =
+        updateData.vendorTypeId !== undefined
+          ? updateData.vendorTypeId
+          : updateData.vendorType !== undefined
+          ? updateData.vendorType
+          : updateData.vendorTypes;
+      const vendorTypeIds = parseVendorTypeIds(rawVendorType);
+
+      if (vendorTypeIds.length > 0) {
+        const validTypesCount = await VendorType.countDocuments({
+          vendorTypeId: { $in: vendorTypeIds },
+          status: "Active",
+        });
+        if (validTypesCount !== vendorTypeIds.length) {
+          throw new CustomError(
+            "One or more invalid or inactive Vendor Type IDs provided",
+            400
+          );
+        }
+      }
+      vendor.vendorTypeId = vendorTypeIds;
+    }
+
     if (updateData.gstCertificate !== undefined)
       vendor.gstCertificate = updateData.gstCertificate.trim();
     if (updateData.panCardImage !== undefined)
@@ -194,7 +302,7 @@ class VendorService {
     }
 
     await vendor.save();
-    return vendor;
+    return await formatVendor(vendor);
   }
 
   async updateVendorStatus(id, status) {
@@ -206,7 +314,7 @@ class VendorService {
 
     vendor.status = status;
     await vendor.save();
-    return vendor;
+    return await formatVendor(vendor);
   }
 
   async deleteVendor(id) {

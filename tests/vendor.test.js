@@ -4,6 +4,7 @@ const { MongoMemoryServer } = require("mongodb-memory-server");
 const app = require("../src/app");
 const User = require("../src/models/Auth/auth");
 const Vendor = require("../src/models/Purchase/Vendor/vendor");
+const VendorType = require("../src/models/Purchase/Vendor/Vendor-type/vendor-type");
 const ThreadBrand = require("../src/models/Material/threadBrand");
 const Counter = require("../src/models/Common/counter");
 
@@ -176,6 +177,55 @@ describe("Vendor Master API Comprehensive Tests (/api/purchase/vendors)", () => 
 
     expect(updateRes.statusCode).toEqual(200);
     expect(updateRes.body.data.companyName).toBe("Updated Supplier");
+  });
+
+  it("should create and update Vendor with multiple vendorTypeId array", async () => {
+    const vt1 = await VendorType.create({ name: "Yarn Manufacturer" });
+    const vt2 = await VendorType.create({ name: "Dyeing Partner" });
+
+    const createRes = await request(app)
+      .post("/api/purchase/vendors")
+      .set("Authorization", `Bearer ${adminToken}`)
+      .send({
+        companyName: "Multi Type Vendor",
+        personName: "Multi Person",
+        mobile: "9876500000",
+        paymentTerm: "30 Days",
+        vendorTypeId: [vt1.vendorTypeId, vt2.vendorTypeId],
+      });
+
+    expect(createRes.statusCode).toEqual(201);
+    expect(createRes.body.data.vendorType).toEqual([
+      {
+        id: vt1.vendorTypeId,
+        name: "Yarn Manufacturer",
+      },
+      {
+        id: vt2.vendorTypeId,
+        name: "Dyeing Partner",
+      },
+    ]);
+
+    const vendorId = createRes.body.data.id;
+
+    const updateRes = await request(app)
+      .put(`/api/purchase/vendors/${vendorId}`)
+      .set("Authorization", `Bearer ${adminToken}`)
+      .send({
+        companyName: "Multi Type Vendor",
+        personName: "Multi Person",
+        mobile: "9876500000",
+        paymentTerm: "30 Days",
+        vendorType: [vt1.vendorTypeId],
+      });
+
+    expect(updateRes.statusCode).toEqual(200);
+    expect(updateRes.body.data.vendorType).toEqual([
+      {
+        id: vt1.vendorTypeId,
+        name: "Yarn Manufacturer",
+      },
+    ]);
   });
 
   it("should update Vendor status (Active/Inactive)", async () => {
