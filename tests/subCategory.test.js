@@ -70,6 +70,20 @@ describe("SubCategory Module API Tests (/api/subcategories)", () => {
       expect(res.body.data.__v).toBeUndefined();
     });
 
+    it("should create sub-category via /api/merchants/subcategories", async () => {
+      const res = await request(app)
+        .post("/api/merchants/subcategories")
+        .set("Authorization", `Bearer ${adminToken}`)
+        .send({
+          categoryId,
+          name: "Kids Wear",
+        });
+
+      expect(res.statusCode).toEqual(201);
+      expect(res.body.success).toBe(true);
+      expect(res.body.data.name).toBe("Kids Wear");
+    });
+
     it("should reject duplicate sub-category name under same category", async () => {
       await SubCategory.create({ categoryId, name: "Ladies Wear" });
 
@@ -98,6 +112,22 @@ describe("SubCategory Module API Tests (/api/subcategories)", () => {
       expect(res.statusCode).toEqual(404);
       expect(res.body.success).toBe(false);
     });
+
+    it("should reject sub-category creation under an Inactive category", async () => {
+      const inactiveCat = await Category.create({ name: "Inactive Cat", status: "Inactive" });
+
+      const res = await request(app)
+        .post("/api/subcategories")
+        .set("Authorization", `Bearer ${adminToken}`)
+        .send({
+          categoryId: inactiveCat.categoryId,
+          name: "Casual Wear",
+        });
+
+      expect(res.statusCode).toEqual(400);
+      expect(res.body.success).toBe(false);
+      expect(res.body.message).toMatch(/inactive Category/i);
+    });
   });
 
   describe("GET /api/subcategories/category/:categoryId", () => {
@@ -119,8 +149,23 @@ describe("SubCategory Module API Tests (/api/subcategories)", () => {
     });
   });
 
+  describe("PATCH /api/subcategories/:id/status", () => {
+    it("should update sub-category status (Active/Inactive)", async () => {
+      const subCat = await SubCategory.create({ categoryId, name: "Status SubCategory" });
+
+      const res = await request(app)
+        .patch(`/api/subcategories/${subCat.subCategoryId}/status`)
+        .set("Authorization", `Bearer ${adminToken}`)
+        .send({ status: "Inactive" });
+
+      expect(res.statusCode).toEqual(200);
+      expect(res.body.success).toBe(true);
+      expect(res.body.data.status).toBe("Inactive");
+    });
+  });
+
   describe("DELETE /api/subcategories/:id", () => {
-    it("should delete sub-category if not in use by a Merchant", async () => {
+    it("should soft delete sub-category if not in use by a Merchant", async () => {
       const subCat = await SubCategory.create({ categoryId, name: "Unused Sub" });
 
       const res = await request(app)
@@ -129,6 +174,19 @@ describe("SubCategory Module API Tests (/api/subcategories)", () => {
 
       expect(res.statusCode).toEqual(200);
       expect(res.body.success).toBe(true);
+      expect(res.body.data).toBeUndefined();
+
+      const getRes = await request(app)
+        .get(`/api/subcategories/${subCat.subCategoryId}`)
+        .set("Authorization", `Bearer ${adminToken}`);
+      expect(getRes.statusCode).toEqual(404);
+
+      const dbSubCat = await SubCategory.findOne({ subCategoryId: subCat.subCategoryId })
+        .select("+isDeleted")
+        .setOptions({ includeDeleted: true });
+      expect(dbSubCat).not.toBeNull();
+      expect(dbSubCat.isDeleted).toBe(true);
+      expect(dbSubCat.status).toBe("Inactive");
     });
 
     it("should reject deletion if sub-category is used by a Merchant", async () => {
@@ -137,7 +195,7 @@ describe("SubCategory Module API Tests (/api/subcategories)", () => {
       await Merchant.create({
         companyName: "ABC Garments",
         personName: "John",
-        mobile: "9999999999",
+        mobile: "9876543210",
         categoryId,
         subCategoryId: subCat.subCategoryId,
       });

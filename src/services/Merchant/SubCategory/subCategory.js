@@ -12,8 +12,11 @@ const {
  */
 const formatSubCategory = async (subCategory) => {
   if (!subCategory) return {};
-  const obj = typeof subCategory.toJSON === "function" ? subCategory.toJSON() : { ...subCategory };
-  
+  const obj =
+    typeof subCategory.toJSON === "function"
+      ? subCategory.toJSON()
+      : { ...subCategory };
+
   const category = await Category.findOne({ categoryId: obj.categoryId });
   if (category) {
     obj.category = {
@@ -21,8 +24,10 @@ const formatSubCategory = async (subCategory) => {
       name: category.name,
     };
   }
-  
+
   delete obj.categoryId;
+  delete obj.isDeleted;
+  delete obj.deletedAt;
   return obj;
 };
 
@@ -40,6 +45,9 @@ class SubCategoryService {
     if (!category) {
       throw new CustomError("Selected parent Category does not exist", 404);
     }
+    if (category.status === "Inactive") {
+      throw new CustomError("Cannot select an inactive Category", 400);
+    }
 
     const existingSubCategory = await SubCategory.findOne({
       categoryId: numCategoryId,
@@ -49,7 +57,7 @@ class SubCategoryService {
     if (existingSubCategory) {
       throw new CustomError(
         "Sub-category with this name already exists in selected Category",
-        400
+        400,
       );
     }
 
@@ -66,8 +74,13 @@ class SubCategoryService {
    * Get all sub-categories with pagination, category filter & search
    */
   async getAllSubCategories(targetCategoryId, queryParams = {}) {
-    const { page, limit, skip, search } = getPaginationQueryParams(queryParams);
+    const { page, limit, skip, search, status } =
+      getPaginationQueryParams(queryParams);
     const query = {};
+
+    if (status) {
+      query.status = new RegExp(`^${status}$`, "i");
+    }
 
     const categoryId = targetCategoryId || queryParams.categoryId;
     if (categoryId) {
@@ -88,7 +101,7 @@ class SubCategoryService {
       .limit(limit);
 
     const formattedSubCategories = await Promise.all(
-      subCategories.map((sc) => formatSubCategory(sc))
+      subCategories.map((sc) => formatSubCategory(sc)),
     );
 
     const pagination = buildPaginationData(totalCount, page, limit);
@@ -130,7 +143,10 @@ class SubCategoryService {
       throw new CustomError("Sub category not found", 404);
     }
 
-    const targetCategoryId = data.categoryId !== undefined ? Number(data.categoryId) : subCategory.categoryId;
+    const targetCategoryId =
+      data.categoryId !== undefined
+        ? Number(data.categoryId)
+        : subCategory.categoryId;
 
     if (data.categoryId !== undefined) {
       if (isNaN(targetCategoryId)) {
@@ -139,6 +155,9 @@ class SubCategoryService {
       const category = await Category.findOne({ categoryId: targetCategoryId });
       if (!category) {
         throw new CustomError("Selected parent Category does not exist", 404);
+      }
+      if (category.status === "Inactive") {
+        throw new CustomError("Cannot select an inactive Category", 400);
       }
     }
 
@@ -152,7 +171,7 @@ class SubCategoryService {
       if (existingSubCategory) {
         throw new CustomError(
           "Sub-category with this name already exists in selected Category",
-          400
+          400,
         );
       }
 
@@ -172,7 +191,26 @@ class SubCategoryService {
   }
 
   /**
-   * Delete sub-category by numeric subCategoryId (with dependency check)
+   * Update SubCategory Status (Active / Inactive)
+   */
+  async updateSubCategoryStatus(id, status) {
+    const numericId = Number(id);
+    if (isNaN(numericId)) {
+      throw new CustomError("Invalid Sub Category ID", 400);
+    }
+
+    const subCategory = await SubCategory.findOne({ subCategoryId: numericId });
+    if (!subCategory) {
+      throw new CustomError("Sub category not found", 404);
+    }
+
+    subCategory.status = status;
+    await subCategory.save();
+    return await formatSubCategory(subCategory);
+  }
+
+  /**
+   * Delete sub-category by numeric subCategoryId (with dependency check and soft delete)
    */
   async deleteSubCategory(id) {
     const numericId = Number(id);
@@ -193,11 +231,11 @@ class SubCategoryService {
     if (linkedMerchants > 0) {
       throw new CustomError(
         "Cannot delete sub-category: It is associated with merchants",
-        400
+        400,
       );
     }
 
-    await SubCategory.findOneAndDelete({ subCategoryId: numericId });
+    await subCategory.softDelete();
     return { id: numericId };
   }
 }

@@ -60,6 +60,8 @@ const formatMerchant = async (merchant) => {
 
   delete obj.categoryId;
   delete obj.subCategoryId;
+  delete obj.isDeleted;
+  delete obj.deletedAt;
 
   return obj;
 };
@@ -83,10 +85,13 @@ class MerchantService {
       throw new CustomError("Invalid Sub Category ID(s)", 400);
     }
 
-    // 1. Verify Category exists
+    // 1. Verify Category exists and is Active
     const category = await Category.findOne({ categoryId: numCategoryId });
     if (!category) {
       throw new CustomError("Selected Category does not exist", 404);
+    }
+    if (category.status === "Inactive") {
+      throw new CustomError("Cannot select an inactive Category", 400);
     }
 
     // 2. Verify all Sub Categories exist
@@ -98,8 +103,11 @@ class MerchantService {
       throw new CustomError("One or more selected Sub Categories do not exist", 404);
     }
 
-    // 3. Verify all Sub Categories belong to selected Category
+    // 3. Verify all Sub Categories belong to selected Category and are Active
     for (const sc of subCategories) {
+      if (sc.status === "Inactive") {
+        throw new CustomError("Cannot select an inactive Sub Category", 400);
+      }
       if (sc.categoryId !== numCategoryId) {
         throw new CustomError(
           "Sub category does not belong to selected category",
@@ -156,9 +164,13 @@ class MerchantService {
    * Get all Merchants with filtering (categoryId, subCategoryId), search & pagination
    */
   async getAllMerchants(queryParams = {}) {
-    const { page, limit, skip, search } = getPaginationQueryParams(queryParams);
+    const { page, limit, skip, search, status } = getPaginationQueryParams(queryParams);
     const { categoryId, subCategoryId } = queryParams;
     const query = {};
+
+    if (status) {
+      query.status = new RegExp(`^${status}$`, "i");
+    }
 
     if (categoryId) {
       const numCatId = Number(categoryId);
@@ -253,6 +265,9 @@ class MerchantService {
       if (!category) {
         throw new CustomError("Selected Category does not exist", 404);
       }
+      if (category.status === "Inactive") {
+        throw new CustomError("Cannot select an inactive Category", 400);
+      }
 
       const subCategories = await SubCategory.find({
         subCategoryId: { $in: targetSubCatIds },
@@ -263,6 +278,9 @@ class MerchantService {
       }
 
       for (const sc of subCategories) {
+        if (sc.status === "Inactive") {
+          throw new CustomError("Cannot select an inactive Sub Category", 400);
+        }
         if (sc.categoryId !== targetCategoryId) {
           throw new CustomError(
             "Sub category does not belong to selected category",
@@ -321,6 +339,22 @@ class MerchantService {
   /**
    * Delete Merchant by numeric ID
    */
+  async updateMerchantStatus(id, status) {
+    const numericId = Number(id);
+    if (isNaN(numericId)) {
+      throw new CustomError("Invalid Merchant ID", 400);
+    }
+
+    const merchant = await Merchant.findOne({ merchantId: numericId });
+    if (!merchant) {
+      throw new CustomError("Merchant not found", 404);
+    }
+
+    merchant.status = status;
+    await merchant.save();
+    return await formatMerchant(merchant);
+  }
+
   async deleteMerchant(id) {
     const numericId = Number(id);
     if (isNaN(numericId)) {
@@ -332,7 +366,7 @@ class MerchantService {
       throw new CustomError("Merchant not found", 404);
     }
 
-    await Merchant.findOneAndDelete({ merchantId: numericId });
+    await merchant.softDelete();
     return { id: numericId };
   }
 }

@@ -72,7 +72,7 @@ describe("Merchant Module API Tests (/api/merchants)", () => {
     paymentTerm: "30 Days",
     gstName: "ABC Garments Pvt Ltd",
     gstNumber: "24ABCDE1234F1Z5",
-    panCard: "PJHPS6236K",
+    panCard: "ABCDE1234F",
     note: "Regular job work customer",
   };
 
@@ -148,7 +148,7 @@ describe("Merchant Module API Tests (/api/merchants)", () => {
 
     it("should REJECT merchant creation if subCategoryId belongs to a DIFFERENT categoryId", async () => {
       const cat2 = await Category.create({ name: "Home Textile" });
-      const subCat3 = await SubCategory.create({
+      const subCat2 = await SubCategory.create({
         categoryId: cat2.categoryId,
         name: "Curtains",
       });
@@ -158,15 +158,54 @@ describe("Merchant Module API Tests (/api/merchants)", () => {
         .set("Authorization", `Bearer ${adminToken}`)
         .send({
           ...sampleMerchant,
-          categoryId,
-          subCategoryId: subCat3.subCategoryId,
+          categoryId: categoryId,
+          subCategoryId: subCat2.subCategoryId,
         });
 
       expect(res.statusCode).toEqual(400);
       expect(res.body.success).toBe(false);
-      expect(res.body.message).toBe(
-        "Sub category does not belong to selected category"
+      expect(res.body.message).toMatch(
+        /Sub category does not belong to selected category/i
       );
+    });
+
+    it("should REJECT merchant creation if Category is Inactive", async () => {
+      const inactiveCat = await Category.create({ name: "Inactive Textile", status: "Inactive" });
+      const sub = await SubCategory.create({ categoryId: inactiveCat.categoryId, name: "Sub Inactive" });
+
+      const res = await request(app)
+        .post("/api/merchants")
+        .set("Authorization", `Bearer ${adminToken}`)
+        .send({
+          ...sampleMerchant,
+          categoryId: inactiveCat.categoryId,
+          subCategoryId: sub.subCategoryId,
+        });
+
+      expect(res.statusCode).toEqual(400);
+      expect(res.body.success).toBe(false);
+      expect(res.body.message).toMatch(/inactive Category/i);
+    });
+
+    it("should REJECT merchant creation if any SubCategory is Inactive", async () => {
+      const inactiveSub = await SubCategory.create({
+        categoryId,
+        name: "Inactive Sub",
+        status: "Inactive",
+      });
+
+      const res = await request(app)
+        .post("/api/merchants")
+        .set("Authorization", `Bearer ${adminToken}`)
+        .send({
+          ...sampleMerchant,
+          categoryId,
+          subCategoryId: inactiveSub.subCategoryId,
+        });
+
+      expect(res.statusCode).toEqual(400);
+      expect(res.body.success).toBe(false);
+      expect(res.body.message).toMatch(/inactive Sub Category/i);
     });
   });
 
@@ -217,6 +256,38 @@ describe("Merchant Module API Tests (/api/merchants)", () => {
       expect(res.body.success).toBe(true);
       expect(res.body.data.length).toBe(1);
       expect(res.body.data[0].companyName).toBe("XYZ Textiles");
+    });
+
+    it("should update merchant status to Active or Inactive", async () => {
+      const patchRes = await request(app)
+        .patch("/api/merchants/1/status")
+        .set("Authorization", `Bearer ${adminToken}`)
+        .send({ status: "Inactive" });
+
+      expect(patchRes.statusCode).toEqual(200);
+      expect(patchRes.body.success).toBe(true);
+      expect(patchRes.body.data.status).toBe("Inactive");
+    });
+
+    it("should soft delete merchant and exclude it from GET requests while keeping record in database", async () => {
+      const deleteRes = await request(app)
+        .delete("/api/merchants/1")
+        .set("Authorization", `Bearer ${adminToken}`);
+
+      expect(deleteRes.statusCode).toEqual(200);
+      expect(deleteRes.body.data).toBeUndefined();
+
+      const getRes = await request(app)
+        .get("/api/merchants/1")
+        .set("Authorization", `Bearer ${adminToken}`);
+
+      expect(getRes.statusCode).toEqual(404);
+
+      const dbMerchant = await Merchant.findOne({ merchantId: 1 })
+        .select("+isDeleted")
+        .setOptions({ includeDeleted: true });
+      expect(dbMerchant).not.toBeNull();
+      expect(dbMerchant.isDeleted).toBe(true);
     });
   });
 });

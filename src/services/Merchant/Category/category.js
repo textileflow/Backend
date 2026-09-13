@@ -105,7 +105,26 @@ class CategoryService {
   }
 
   /**
-   * Delete category by numeric categoryId (with dependency check)
+   * Update Category Status (Active / Inactive)
+   */
+  async updateCategoryStatus(id, status) {
+    const numericId = Number(id);
+    if (isNaN(numericId)) {
+      throw new CustomError("Invalid Category ID", 400);
+    }
+
+    const category = await Category.findOne({ categoryId: numericId });
+    if (!category) {
+      throw new CustomError("Category not found", 404);
+    }
+
+    category.status = status;
+    await category.save();
+    return category;
+  }
+
+  /**
+   * Delete category by numeric categoryId (with dependency check and soft delete)
    */
   async deleteCategory(id) {
     const numericId = Number(id);
@@ -140,7 +159,7 @@ class CategoryService {
       );
     }
 
-    await Category.findOneAndDelete({ categoryId: numericId });
+    await category.softDelete();
     return { id: numericId };
   }
 }

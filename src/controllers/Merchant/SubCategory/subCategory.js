@@ -87,14 +87,36 @@ const update = async (req, res, next) => {
 };
 
 /**
+ * @desc    Update sub-category status (Active / Inactive)
+ * @route   PATCH /api/sub-categories/:id/status
+ * @access  Private (ADMIN, MANAGER)
+ */
+const updateStatus = async (req, res, next) => {
+  try {
+    const subCategory = await subCategoryService.updateSubCategoryStatus(
+      req.params.id,
+      req.body.status
+    );
+    return sendSuccess(
+      res,
+      200,
+      "Sub-category status updated successfully",
+      subCategory
+    );
+  } catch (error) {
+    next(error);
+  }
+};
+
+/**
  * @desc    Delete sub-category by numeric subCategoryId
  * @route   DELETE /api/subcategories/:id
  * @access  Private (ADMIN)
  */
 const remove = async (req, res, next) => {
   try {
-    const result = await subCategoryService.deleteSubCategory(req.params.id);
-    return sendSuccess(res, 200, "Sub-category deleted successfully", result);
+    await subCategoryService.deleteSubCategory(req.params.id);
+    return sendSuccess(res, 200, "Sub-category deleted successfully");
   } catch (error) {
     next(error);
   }
@@ -105,5 +127,6 @@ module.exports = {
   getAll,
   getById,
   update,
+  updateStatus,
   remove,
 };

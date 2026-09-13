@@ -67,14 +67,31 @@ const update = async (req, res, next) => {
 };
 
 /**
+ * @desc    Update category status (Active / Inactive)
+ * @route   PATCH /api/categories/:id/status
+ * @access  Private (ADMIN, MANAGER)
+ */
+const updateStatus = async (req, res, next) => {
+  try {
+    const category = await categoryService.updateCategoryStatus(
+      req.params.id,
+      req.body.status
+    );
+    return sendSuccess(res, 200, "Category status updated successfully", category);
+  } catch (error) {
+    next(error);
+  }
+};
+
+/**
  * @desc    Delete category by numeric categoryId
  * @route   DELETE /api/categories/:id
  * @access  Private (ADMIN)
  */
 const remove = async (req, res, next) => {
   try {
-    const result = await categoryService.deleteCategory(req.params.id);
-    return sendSuccess(res, 200, "Category deleted successfully", result);
+    await categoryService.deleteCategory(req.params.id);
+    return sendSuccess(res, 200, "Category deleted successfully");
   } catch (error) {
     next(error);
   }
@@ -85,5 +102,6 @@ module.exports = {
   getAll,
   getById,
   update,
+  updateStatus,
   remove,
 };

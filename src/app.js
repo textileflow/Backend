@@ -7,6 +7,17 @@ const authRoutes = require("./routes/Auth/auth");
 const categoryRoutes = require("./routes/Merchant/Category/category");
 const subCategoryRoutes = require("./routes/Merchant/SubCategory/subCategory");
 const merchantRoutes = require("./routes/Merchant/merchant");
+const vendorRoutes = require("./routes/Purchase/Vendor/vendor");
+const unitRoutes = require("./routes/Master/unit");
+const machineTypeRoutes = require("./routes/Master/machineType");
+const threadBrandRoutes = require("./routes/Material/threadBrand");
+const threadCatalogRoutes = require("./routes/Material/threadCatalog");
+const threadShadeRoutes = require("./routes/Material/threadShade");
+const threadRoutes = require("./routes/Material/thread");
+const fabricRoutes = require("./routes/Material/fabric");
+const materialRoutes = require("./routes/Material/material");
+const machineRoutes = require("./routes/Machine/machine");
+const designRoutes = require("./routes/Design/design");
 const uploadRoutes = require("./routes/Upload/upload");
 const {
   notFoundHandler,
@@ -59,15 +70,28 @@ app.get("/api/health", (req, res) => {
 
 // 7. Mount Module Routes
 app.use("/api/auth", authRoutes);
+app.use("/api/merchants/categories", categoryRoutes);
+app.use("/api/merchants/subcategories", subCategoryRoutes);
 app.use("/api/categories", categoryRoutes);
 app.use("/api/subcategories", subCategoryRoutes);
 app.use("/api/merchants", merchantRoutes);
+app.use("/api/purchase/vendors", vendorRoutes);
+app.use("/api/units", unitRoutes);
+app.use("/api/machine-types", machineTypeRoutes);
+app.use("/api/thread-brands", threadBrandRoutes);
+app.use("/api/thread-catalogs", threadCatalogRoutes);
+app.use("/api/thread-shades", threadShadeRoutes);
+app.use("/api/threads", threadRoutes);
+app.use("/api/fabrics", fabricRoutes);
+app.use("/api/materials", materialRoutes);
+app.use("/api/machines", machineRoutes);
+app.use("/api/designs", designRoutes);
 app.use("/api/upload", uploadRoutes);
 
-// 7. Handle 404 routes
+// 8. Handle 404 routes
 app.use(notFoundHandler);
 
-// 8. Centralized error handling
+// 9. Centralized error handling
 app.use(errorHandler);
 
 module.exports = app;

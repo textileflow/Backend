@@ -68,14 +68,31 @@ const update = async (req, res, next) => {
 };
 
 /**
+ * @desc    Update Merchant Status (Active / Inactive)
+ * @route   PATCH /api/merchants/:id/status
+ * @access  Private (ADMIN, MANAGER)
+ */
+const updateStatus = async (req, res, next) => {
+  try {
+    const merchant = await merchantService.updateMerchantStatus(
+      req.params.id,
+      req.body.status
+    );
+    return sendSuccess(res, 200, "Merchant status updated successfully", merchant);
+  } catch (error) {
+    next(error);
+  }
+};
+
+/**
  * @desc    Delete Merchant by numeric ID
  * @route   DELETE /api/merchants/:id
  * @access  Private (ADMIN)
  */
 const remove = async (req, res, next) => {
   try {
-    const result = await merchantService.deleteMerchant(req.params.id);
-    return sendSuccess(res, 200, "Merchant deleted successfully", result);
+    await merchantService.deleteMerchant(req.params.id);
+    return sendSuccess(res, 200, "Merchant deleted successfully");
   } catch (error) {
     next(error);
   }
@@ -86,5 +103,6 @@ module.exports = {
   getAll,
   getById,
   update,
+  updateStatus,
   remove,
 };

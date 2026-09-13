@@ -12,12 +12,14 @@ const getPaginationQueryParams = (query = {}) => {
   const limit = Math.max(1, parseInt(query.per_page || query.limit, 10) || 10);
   const skip = (page - 1) * limit;
   const search = query.search ? String(query.search).trim() : "";
+  const status = query.status ? String(query.status).trim() : "";
 
   return {
     page,
     limit,
     skip,
     search,
+    status,
   };
 };
 

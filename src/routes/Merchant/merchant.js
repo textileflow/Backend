@@ -3,7 +3,10 @@ const router = express.Router();
 const merchantController = require("../../controllers/Merchant/merchant");
 const { protect, authorizeRoles } = require("../../middleware/Auth/auth");
 const validate = require("../../middleware/Common/validate");
-const { merchantValidator } = require("../../utils/Merchant/validators");
+const {
+  merchantValidator,
+  statusValidator,
+} = require("../../utils/Merchant/validators");
 
 // All routes require authentication
 router.use(protect);
@@ -17,6 +20,21 @@ router
     merchantController.create
   )
   .get(authorizeRoles("admin", "manager", "staff"), merchantController.getAll);
+
+router
+  .route("/:id/status")
+  .patch(
+    authorizeRoles("admin", "manager"),
+    statusValidator,
+    validate,
+    merchantController.updateStatus
+  )
+  .put(
+    authorizeRoles("admin", "manager"),
+    statusValidator,
+    validate,
+    merchantController.updateStatus
+  );
 
 router
   .route("/:id")

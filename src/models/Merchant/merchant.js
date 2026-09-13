@@ -1,6 +1,8 @@
 const mongoose = require("mongoose");
 const Counter = require("../Common/counter");
 
+const softDeletePlugin = require("../../plugins/softDelete");
+
 const merchantSchema = new mongoose.Schema(
   {
     merchantId: {
@@ -76,11 +78,18 @@ const merchantSchema = new mongoose.Schema(
       trim: true,
       default: "",
     },
+    status: {
+      type: String,
+      enum: ["Active", "Inactive"],
+      default: "Active",
+    },
   },
   {
     timestamps: true,
   }
 );
+
+merchantSchema.plugin(softDeletePlugin);
 
 // Pre-save hook for auto-incrementing numeric merchantId (1, 2, 3...)
 merchantSchema.pre("save", async function () {
@@ -101,6 +110,8 @@ merchantSchema.methods.toJSON = function () {
   delete merchantObj._id;
   delete merchantObj.merchantId;
   delete merchantObj.__v;
+  delete merchantObj.isDeleted;
+  delete merchantObj.deletedAt;
   delete merchantObj.createdAt;
   delete merchantObj.updatedAt;
   return merchantObj;

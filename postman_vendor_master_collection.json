@@ -1,0 +1,506 @@
+{
+  "info": {
+    "_postman_id": "textileflow-master-suite-v4",
+    "name": "TextileFlow ERP - Category, SubCategory, Vendor & Merchant Master API Suite",
+    "description": "Complete Collection with updated route paths {{Base_url}}/api/merchants/categories and {{Base_url}}/api/merchants/subcategories, Inactive validation, Status Toggle (Active/Inactive), and Soft Delete.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "Base_url",
+      "value": "http://localhost:5000",
+      "type": "string"
+    },
+    {
+      "key": "token",
+      "value": "YOUR_JWT_BEARER_TOKEN_HERE",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "Category Master",
+      "item": [
+        {
+          "name": "1. Create Category",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Garment Trader\",\n  \"note\": \"Garment related traders\"\n}"
+            },
+            "url": {
+              "raw": "{{Base_url}}/api/merchants/categories",
+              "host": [
+                "{{Base_url}}"
+              ],
+              "path": [
+                "api",
+                "merchants",
+                "categories"
+              ]
+            }
+          }
+        },
+        {
+          "name": "2. Get All Categories (with page, per_page, search, status)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{Base_url}}/api/merchants/categories?page=1&per_page=10&search=&status=active",
+              "host": [
+                "{{Base_url}}"
+              ],
+              "path": [
+                "api",
+                "merchants",
+                "categories"
+              ]
+            }
+          }
+        },
+        {
+          "name": "3. Update Category Status (Active / Inactive)",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"Inactive\"\n}"
+            },
+            "url": {
+              "raw": "{{Base_url}}/api/merchants/categories/1/status",
+              "host": [
+                "{{Base_url}}"
+              ],
+              "path": [
+                "api",
+                "merchants",
+                "categories",
+                "1",
+                "status"
+              ]
+            }
+          }
+        },
+        {
+          "name": "4. Delete Category (Soft Delete)",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{Base_url}}/api/merchants/categories/1",
+              "host": [
+                "{{Base_url}}"
+              ],
+              "path": [
+                "api",
+                "merchants",
+                "categories",
+                "1"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "SubCategory Master",
+      "item": [
+        {
+          "name": "1. Create SubCategory",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"categoryId\": 1,\n  \"name\": \"Ladies Wear\",\n  \"note\": \"Ladies garment traders\"\n}"
+            },
+            "url": {
+              "raw": "{{Base_url}}/api/merchants/subcategories",
+              "host": [
+                "{{Base_url}}"
+              ],
+              "path": [
+                "api",
+                "merchants",
+                "subcategories"
+              ]
+            }
+          }
+        },
+        {
+          "name": "2. Get All SubCategories (with page, per_page, search, status)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{Base_url}}/api/merchants/subcategories?page=1&per_page=10&search=&status=active",
+              "host": [
+                "{{Base_url}}"
+              ],
+              "path": [
+                "api",
+                "merchants",
+                "subcategories"
+              ]
+            }
+          }
+        },
+        {
+          "name": "3. Update SubCategory Status (Active / Inactive)",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"Inactive\"\n}"
+            },
+            "url": {
+              "raw": "{{Base_url}}/api/merchants/subcategories/1/status",
+              "host": [
+                "{{Base_url}}"
+              ],
+              "path": [
+                "api",
+                "merchants",
+                "subcategories",
+                "1",
+                "status"
+              ]
+            }
+          }
+        },
+        {
+          "name": "4. Delete SubCategory (Soft Delete)",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{Base_url}}/api/merchants/subcategories/1",
+              "host": [
+                "{{Base_url}}"
+              ],
+              "path": [
+                "api",
+                "merchants",
+                "subcategories",
+                "1"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Vendor Master",
+      "item": [
+        {
+          "name": "1. Create Vendor",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"companyName\": \"Royal Embroidery Threads\",\n  \"personName\": \"Rajesh Patel\",\n  \"mobile\": \"9876543210\",\n  \"email\": \"rajesh@royalthreads.com\",\n  \"gstNumber\": \"24ABCDE1234F1Z5\",\n  \"panCard\": \"ABCDE1234F\",\n  \"paymentTerm\": 30,\n  \"address\": \"Ring Road, Surat, Gujarat\",\n  \"note\": \"Preferred supplier for Rayon threads\"\n}"
+            },
+            "url": {
+              "raw": "{{Base_url}}/api/purchase/vendors",
+              "host": [
+                "{{Base_url}}"
+              ],
+              "path": [
+                "api",
+                "purchase",
+                "vendors"
+              ]
+            }
+          }
+        },
+        {
+          "name": "2. Get All Vendors (with page, per_page, search, status)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{Base_url}}/api/purchase/vendors?page=1&per_page=10&search=&status=active",
+              "host": [
+                "{{Base_url}}"
+              ],
+              "path": [
+                "api",
+                "purchase",
+                "vendors"
+              ]
+            }
+          }
+        },
+        {
+          "name": "3. Update Vendor Status (Active / Inactive)",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"Inactive\"\n}"
+            },
+            "url": {
+              "raw": "{{Base_url}}/api/purchase/vendors/1/status",
+              "host": [
+                "{{Base_url}}"
+              ],
+              "path": [
+                "api",
+                "purchase",
+                "vendors",
+                "1",
+                "status"
+              ]
+            }
+          }
+        },
+        {
+          "name": "4. Delete Vendor (Soft Delete)",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{Base_url}}/api/purchase/vendors/1",
+              "host": [
+                "{{Base_url}}"
+              ],
+              "path": [
+                "api",
+                "purchase",
+                "vendors",
+                "1"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Merchant Master",
+      "item": [
+        {
+          "name": "1. Create Merchant",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"companyName\": \"ABC Garments\",\n  \"personName\": \"John Doe\",\n  \"mobile\": \"9876543210\",\n  \"email\": \"john@abcgarments.com\",\n  \"categoryId\": 1,\n  \"subCategoryId\": [\n    1,\n    2\n  ],\n  \"paymentTerm\": \"15 Days\",\n  \"address\": \"Market Road, Surat\",\n  \"note\": \"Key buyer\"\n}"
+            },
+            "url": {
+              "raw": "{{Base_url}}/api/merchants",
+              "host": [
+                "{{Base_url}}"
+              ],
+              "path": [
+                "api",
+                "merchants"
+              ]
+            }
+          }
+        },
+        {
+          "name": "2. Get All Merchants (with page, per_page, search, status)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{Base_url}}/api/merchants?page=1&per_page=10&search=&status=active",
+              "host": [
+                "{{Base_url}}"
+              ],
+              "path": [
+                "api",
+                "merchants"
+              ]
+            }
+          }
+        },
+        {
+          "name": "3. Update Merchant Status (Active / Inactive)",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"Inactive\"\n}"
+            },
+            "url": {
+              "raw": "{{Base_url}}/api/merchants/1/status",
+              "host": [
+                "{{Base_url}}"
+              ],
+              "path": [
+                "api",
+                "merchants",
+                "1",
+                "status"
+              ]
+            }
+          }
+        },
+        {
+          "name": "4. Delete Merchant (Soft Delete)",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{Base_url}}/api/merchants/1",
+              "host": [
+                "{{Base_url}}"
+              ],
+              "path": [
+                "api",
+                "merchants",
+                "1"
+              ]
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

@@ -1,6 +1,8 @@
 const mongoose = require("mongoose");
 const Counter = require("../../Common/counter");
 
+const softDeletePlugin = require("../../../plugins/softDelete");
+
 const categorySchema = new mongoose.Schema(
   {
     categoryId: {
@@ -18,11 +20,18 @@ const categorySchema = new mongoose.Schema(
       trim: true,
       default: "",
     },
+    status: {
+      type: String,
+      enum: ["Active", "Inactive"],
+      default: "Active",
+    },
   },
   {
     timestamps: true,
   }
 );
+
+categorySchema.plugin(softDeletePlugin);
 
 // Pre-save hook for auto-incrementing numeric categoryId (1, 2, 3...)
 categorySchema.pre("save", async function () {
@@ -43,6 +52,8 @@ categorySchema.methods.toJSON = function () {
   delete categoryObj._id;
   delete categoryObj.categoryId;
   delete categoryObj.__v;
+  delete categoryObj.isDeleted;
+  delete categoryObj.deletedAt;
   delete categoryObj.createdAt;
   delete categoryObj.updatedAt;
   return categoryObj;

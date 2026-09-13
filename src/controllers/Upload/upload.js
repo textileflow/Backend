@@ -8,7 +8,10 @@ const { sendSuccess } = require("../../utils/Common/apiResponse");
  */
 const uploadSingle = async (req, res, next) => {
   try {
-    const folder = req.query.folder || req.body.folder || "upload-single";
+    const folder =
+      (req.query && req.query.folder) ||
+      (req.body && req.body.folder) ||
+      "upload-single";
     const data = await uploadService.uploadSingle(req.file, folder);
     return sendSuccess(res, 200, "File uploaded successfully", data);
   } catch (error) {
@@ -23,7 +26,10 @@ const uploadSingle = async (req, res, next) => {
  */
 const uploadMultiple = async (req, res, next) => {
   try {
-    const folder = req.query.folder || req.body.folder || "upload-multiple";
+    const folder =
+      (req.query && req.query.folder) ||
+      (req.body && req.body.folder) ||
+      "upload-multiple";
     const data = await uploadService.uploadMultiple(req.files, folder);
     return sendSuccess(res, 200, "Files uploaded successfully", data);
   } catch (error) {

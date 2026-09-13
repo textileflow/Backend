@@ -38,7 +38,17 @@ const subCategoryUpdateValidator = [
     .trim(),
 ];
 
+const statusValidator = [
+  body("status")
+    .trim()
+    .notEmpty()
+    .withMessage("Status is required")
+    .isIn(["Active", "Inactive"])
+    .withMessage("Status must be either Active or Inactive"),
+];
+
 module.exports = {
   subCategoryValidator,
   subCategoryUpdateValidator,
+  statusValidator,
 };

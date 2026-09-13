@@ -76,6 +76,19 @@ describe("Category Module API Tests (/api/categories)", () => {
       expect(res.body.data.__v).toBeUndefined();
     });
 
+    it("should create a category via /api/merchants/categories", async () => {
+      const res = await request(app)
+        .post("/api/merchants/categories")
+        .set("Authorization", `Bearer ${adminToken}`)
+        .send({
+          name: "Merchant Category",
+        });
+
+      expect(res.statusCode).toEqual(201);
+      expect(res.body.success).toBe(true);
+      expect(res.body.data.name).toBe("Merchant Category");
+    });
+
     it("should reject creation by Staff (Forbidden 403)", async () => {
       const res = await request(app)
         .post("/api/categories")
@@ -149,8 +162,23 @@ describe("Category Module API Tests (/api/categories)", () => {
     });
   });
 
+  describe("PATCH /api/categories/:id/status", () => {
+    it("should update category status (Active/Inactive)", async () => {
+      const cat = await Category.create({ name: "Status Category" });
+
+      const res = await request(app)
+        .patch(`/api/categories/${cat.categoryId}/status`)
+        .set("Authorization", `Bearer ${adminToken}`)
+        .send({ status: "Inactive" });
+
+      expect(res.statusCode).toEqual(200);
+      expect(res.body.success).toBe(true);
+      expect(res.body.data.status).toBe("Inactive");
+    });
+  });
+
   describe("DELETE /api/categories/:id", () => {
-    it("should delete category if not in use", async () => {
+    it("should soft delete category if not in use", async () => {
       const cat = await Category.create({ name: "Unused Category" });
 
       const res = await request(app)
@@ -159,9 +187,19 @@ describe("Category Module API Tests (/api/categories)", () => {
 
       expect(res.statusCode).toEqual(200);
       expect(res.body.success).toBe(true);
+      expect(res.body.data).toBeUndefined();
 
-      const check = await Category.findOne({ categoryId: cat.categoryId });
-      expect(check).toBeNull();
+      const getRes = await request(app)
+        .get(`/api/categories/${cat.categoryId}`)
+        .set("Authorization", `Bearer ${adminToken}`);
+      expect(getRes.statusCode).toEqual(404);
+
+      const dbCategory = await Category.findOne({ categoryId: cat.categoryId })
+        .select("+isDeleted")
+        .setOptions({ includeDeleted: true });
+      expect(dbCategory).not.toBeNull();
+      expect(dbCategory.isDeleted).toBe(true);
+      expect(dbCategory.status).toBe("Inactive");
     });
 
     it("should reject deletion if category is used by a SubCategory", async () => {

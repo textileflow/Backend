@@ -1,6 +1,8 @@
 const mongoose = require("mongoose");
 const Counter = require("../../Common/counter");
 
+const softDeletePlugin = require("../../../plugins/softDelete");
+
 const subCategorySchema = new mongoose.Schema(
   {
     subCategoryId: {
@@ -21,11 +23,18 @@ const subCategorySchema = new mongoose.Schema(
       trim: true,
       default: "",
     },
+    status: {
+      type: String,
+      enum: ["Active", "Inactive"],
+      default: "Active",
+    },
   },
   {
     timestamps: true,
   }
 );
+
+subCategorySchema.plugin(softDeletePlugin);
 
 // Ensure compound index for unique sub-category name per category
 subCategorySchema.index({ categoryId: 1, name: 1 }, { unique: true });
@@ -49,6 +58,8 @@ subCategorySchema.methods.toJSON = function () {
   delete subCatObj._id;
   delete subCatObj.subCategoryId;
   delete subCatObj.__v;
+  delete subCatObj.isDeleted;
+  delete subCatObj.deletedAt;
   delete subCatObj.createdAt;
   delete subCatObj.updatedAt;
   return subCatObj;

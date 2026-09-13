@@ -6,6 +6,7 @@ const validate = require("../../../middleware/Common/validate");
 const {
   categoryValidator,
   categoryUpdateValidator,
+  statusValidator,
 } = require("../../../utils/Merchant/Category/validators");
 
 // All routes require authentication
@@ -22,6 +23,21 @@ router
   .get(
     authorizeRoles("admin", "manager", "staff"),
     categoryController.getAll
+  );
+
+router
+  .route("/:id/status")
+  .patch(
+    authorizeRoles("admin", "manager"),
+    statusValidator,
+    validate,
+    categoryController.updateStatus
+  )
+  .put(
+    authorizeRoles("admin", "manager"),
+    statusValidator,
+    validate,
+    categoryController.updateStatus
   );
 
 router
