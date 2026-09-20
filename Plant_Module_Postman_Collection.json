@@ -1,0 +1,362 @@
+{
+  "info": {
+    "_postman_id": "b7891234-plant-erp-collection-v2",
+    "name": "Embroidery ERP - Plant Module (Staff, SubContractor & Machines)",
+    "description": "Complete Postman Collection for Staff (Workers/Designers), Sub Contractors, and Machines (In-house & Subcontractor).",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "http://localhost:5000",
+      "type": "string"
+    },
+    {
+      "key": "token",
+      "value": "YOUR_JWT_TOKEN_HERE",
+      "type": "string"
+    }
+  ],
+  "auth": {
+    "type": "bearer",
+    "bearer": [
+      {
+        "key": "token",
+        "value": "{{token}}",
+        "type": "string"
+      }
+    ]
+  },
+  "item": [
+    {
+      "name": "1. Staff (Workers & Designers)",
+      "item": [
+        {
+          "name": "Create Staff - Worker",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Karan Sharma\",\n  \"type\": \"Worker\",\n  \"mobile\": \"9876543211\",\n  \"email\": \"karan@example.com\",\n  \"shift\": \"Day\",\n  \"salaryType\": \"Fixed\",\n  \"salaryAmount\": 18000,\n  \"joiningDate\": \"2026-01-15\",\n  \"note\": \"Senior Machine Operator\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/plants/staff",
+              "host": ["{{base_url}}"],
+              "path": ["api", "plants", "staff"]
+            }
+          }
+        },
+        {
+          "name": "Create Staff - Designer",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Vijay Verma\",\n  \"type\": \"Designer\",\n  \"mobile\": \"9876543212\",\n  \"email\": \"vijay@example.com\",\n  \"shift\": \"General\",\n  \"salaryType\": \"Fixed\",\n  \"salaryAmount\": 35000,\n  \"joiningDate\": \"2026-02-01\",\n  \"note\": \"Embroidery Punching Master Designer\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/plants/staff",
+              "host": ["{{base_url}}"],
+              "path": ["api", "plants", "staff"]
+            }
+          }
+        },
+        {
+          "name": "Get All Staff",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/api/plants/staff?page=1&limit=10&type=Worker&status=Active",
+              "host": ["{{base_url}}"],
+              "path": ["api", "plants", "staff"],
+              "query": [
+                { "key": "page", "value": "1" },
+                { "key": "limit", "value": "10" },
+                { "key": "type", "value": "Worker" },
+                { "key": "status", "value": "Active" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get Staff By ID",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/api/plants/staff/1",
+              "host": ["{{base_url}}"],
+              "path": ["api", "plants", "staff", "1"]
+            }
+          }
+        },
+        {
+          "name": "Update Staff",
+          "request": {
+            "method": "PUT",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Karan Sharma\",\n  \"shift\": \"Night\",\n  \"salaryType\": \"Fixed\",\n  \"salaryAmount\": 20000\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/plants/staff/1",
+              "host": ["{{base_url}}"],
+              "path": ["api", "plants", "staff", "1"]
+            }
+          }
+        },
+        {
+          "name": "Update Staff Status",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"Inactive\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/plants/staff/1/status",
+              "host": ["{{base_url}}"],
+              "path": ["api", "plants", "staff", "1", "status"]
+            }
+          }
+        },
+        {
+          "name": "Delete Staff",
+          "request": {
+            "method": "DELETE",
+            "url": {
+              "raw": "{{base_url}}/api/plants/staff/1",
+              "host": ["{{base_url}}"],
+              "path": ["api", "plants", "staff", "1"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "2. Sub Contractor",
+      "item": [
+        {
+          "name": "Create Sub Contractor",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"companyName\": \"Shree Ram Embroidery Works\",\n  \"personName\": \"Suresh Bhai\",\n  \"mobile\": \"9876543213\",\n  \"email\": \"shreeram@example.com\",\n  \"address\": \"45, Katargam GIDC, Surat\",\n  \"gstNumber\": \"24ABCDE1234F1Z5\",\n  \"panCard\": \"ABCDE1234F\",\n  \"ratePerStitch\": 0.25,\n  \"paymentTerms\": \"15 Days\",\n  \"note\": \"Outsource job work partner\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/plants/subcontractors",
+              "host": ["{{base_url}}"],
+              "path": ["api", "plants", "subcontractors"]
+            }
+          }
+        },
+        {
+          "name": "Get All Sub Contractors",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/api/plants/subcontractors?page=1&limit=10&search=&status=Active",
+              "host": ["{{base_url}}"],
+              "path": ["api", "plants", "subcontractors"],
+              "query": [
+                { "key": "page", "value": "1" },
+                { "key": "limit", "value": "10" },
+                { "key": "search", "value": "" },
+                { "key": "status", "value": "Active" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get Sub Contractor By ID (With Machines)",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/api/plants/subcontractors/1",
+              "host": ["{{base_url}}"],
+              "path": ["api", "plants", "subcontractors", "1"]
+            }
+          }
+        },
+        {
+          "name": "Update Sub Contractor",
+          "request": {
+            "method": "PUT",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"companyName\": \"Shree Ram Embroidery Pvt Ltd\",\n  \"ratePerStitch\": 0.27,\n  \"paymentTerms\": \"30 Days\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/plants/subcontractors/1",
+              "host": ["{{base_url}}"],
+              "path": ["api", "plants", "subcontractors", "1"]
+            }
+          }
+        },
+        {
+          "name": "Update Sub Contractor Status",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"Inactive\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/plants/subcontractors/1/status",
+              "host": ["{{base_url}}"],
+              "path": ["api", "plants", "subcontractors", "1", "status"]
+            }
+          }
+        },
+        {
+          "name": "Delete Sub Contractor",
+          "request": {
+            "method": "DELETE",
+            "url": {
+              "raw": "{{base_url}}/api/plants/subcontractors/1",
+              "host": ["{{base_url}}"],
+              "path": ["api", "plants", "subcontractors", "1"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "3. Machines (In-house & Subcontractor)",
+      "item": [
+        {
+          "name": "Create Machine - In-house",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"machineName\": \"Tajima 20-Head Machine 1\",\n  \"ownership\": \"In-house\",\n  \"machineType\": \"Multi Head\",\n  \"brand\": \"Tajima\",\n  \"model\": \"TMAR-KC\",\n  \"headCount\": 20,\n  \"needleCount\": 9,\n  \"maxRpm\": 1100,\n  \"headSpacing\": 400,\n  \"note\": \"Primary production machine\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/plants/machines",
+              "host": ["{{base_url}}"],
+              "path": ["api", "plants", "machines"]
+            }
+          }
+        },
+        {
+          "name": "Create Machine - Subcontractor",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"machineName\": \"Subcontractor Feiya 15-Head Machine\",\n  \"ownership\": \"Subcontractor\",\n  \"subContractorId\": 1,\n  \"machineType\": \"Multi Head\",\n  \"brand\": \"Feiya\",\n  \"model\": \"CT1501\",\n  \"headCount\": 15,\n  \"needleCount\": 12,\n  \"maxRpm\": 850,\n  \"headSpacing\": 400,\n  \"note\": \"Machine assigned at Subcontractor site\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/plants/machines",
+              "host": ["{{base_url}}"],
+              "path": ["api", "plants", "machines"]
+            }
+          }
+        },
+        {
+          "name": "Get All Machines",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/api/plants/machines?page=1&limit=10&ownership=In-house&status=Active",
+              "host": ["{{base_url}}"],
+              "path": ["api", "plants", "machines"],
+              "query": [
+                { "key": "page", "value": "1" },
+                { "key": "limit", "value": "10" },
+                { "key": "ownership", "value": "In-house" },
+                { "key": "status", "value": "Active" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get Machine By ID",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/api/plants/machines/1",
+              "host": ["{{base_url}}"],
+              "path": ["api", "plants", "machines", "1"]
+            }
+          }
+        },
+        {
+          "name": "Update Machine",
+          "request": {
+            "method": "PUT",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"machineName\": \"Tajima 20-Head Machine 1 (Upgraded)\",\n  \"maxRpm\": 1200\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/plants/machines/1",
+              "host": ["{{base_url}}"],
+              "path": ["api", "plants", "machines", "1"]
+            }
+          }
+        },
+        {
+          "name": "Update Machine Status",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"Maintenance\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/plants/machines/1/status",
+              "host": ["{{base_url}}"],
+              "path": ["api", "plants", "machines", "1", "status"]
+            }
+          }
+        },
+        {
+          "name": "Delete Machine",
+          "request": {
+            "method": "DELETE",
+            "url": {
+              "raw": "{{base_url}}/api/plants/machines/1",
+              "host": ["{{base_url}}"],
+              "path": ["api", "plants", "machines", "1"]
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

@@ -70,6 +70,10 @@ app.get("/api/health", (req, res) => {
   });
 });
 
+const plantStaffRoutes = require("./routes/Plant/Staff/staff");
+const plantSubContractorRoutes = require("./routes/Plant/SubContractor/subContractor");
+const plantMachineRoutes = require("./routes/Plant/Machine/plantMachine");
+
 // 7. Mount Module Routes
 app.use("/api/auth", authRoutes);
 app.use("/api/merchants/categories", categoryRoutes);
@@ -95,6 +99,13 @@ app.use("/api/materials", materialRoutes);
 app.use("/api/machines", machineRoutes);
 app.use("/api/designs", designRoutes);
 app.use("/api/upload", uploadRoutes);
+
+// Plant Module Routes
+app.use("/api/plants/staff", plantStaffRoutes);
+app.use("/api/plants/subcontractors", plantSubContractorRoutes);
+app.use("/api/plants/machines", plantMachineRoutes);
+app.use("/api/staff", plantStaffRoutes);
+app.use("/api/subcontractors", plantSubContractorRoutes);
 
 // 8. Handle 404 routes
 app.use(notFoundHandler);
