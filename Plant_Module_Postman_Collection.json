@@ -156,7 +156,7 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"companyName\": \"Shree Ram Embroidery Works\",\n  \"personName\": \"Suresh Bhai\",\n  \"mobile\": \"9876543213\",\n  \"email\": \"shreeram@example.com\",\n  \"address\": \"45, Katargam GIDC, Surat\",\n  \"gstNumber\": \"24ABCDE1234F1Z5\",\n  \"panCard\": \"ABCDE1234F\",\n  \"ratePerStitch\": 0.25,\n  \"paymentTerms\": \"15 Days\",\n  \"note\": \"Outsource job work partner\"\n}"
+              "raw": "{\n  \"companyName\": \"Shree Ram Embroidery Works\",\n  \"personName\": \"Suresh Bhai\",\n  \"mobile\": \"9876543213\",\n  \"email\": \"shreeram@example.com\",\n  \"address\": \"45, Katargam GIDC, Surat\",\n  \"gstNumber\": \"24ABCDE1234F1Z5\",\n  \"gstCertificate\": \"\",\n  \"panCard\": \"ABCDE1234F\",\n  \"panCardImage\": \"\",\n  \"ratePerStitch\": 0.25,\n  \"paymentTerms\": \"15 Days\",\n  \"note\": \"Outsource job work partner\"\n}"
             },
             "url": {
               "raw": "{{base_url}}/api/plants/subcontractors",

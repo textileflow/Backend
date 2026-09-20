@@ -46,10 +46,20 @@ const subContractorSchema = new mongoose.Schema(
       uppercase: true,
       default: "",
     },
+    gstCertificate: {
+      type: String,
+      trim: true,
+      default: "",
+    },
     panCard: {
       type: String,
       trim: true,
       uppercase: true,
+      default: "",
+    },
+    panCardImage: {
+      type: String,
+      trim: true,
       default: "",
     },
     ratePerStitch: {
@@ -60,10 +70,6 @@ const subContractorSchema = new mongoose.Schema(
       type: String,
       trim: true,
       default: "",
-    },
-    plantId: {
-      type: Number,
-      default: null, // Associated primary plant if applicable
     },
     status: {
       type: String,
@@ -109,6 +115,7 @@ subContractorSchema.methods.toJSON = function () {
   subObj.id = subObj.subContractorId;
   delete subObj._id;
   delete subObj.subContractorId;
+  delete subObj.plantId;
   delete subObj.__v;
   delete subObj.isDeleted;
   delete subObj.deletedAt;

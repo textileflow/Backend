@@ -51,6 +51,8 @@ const subContractorValidator = [
     .matches(GST_REGEX)
     .withMessage("Invalid GST Number format"),
 
+  body("gstCertificate").optional().trim(),
+
   body("panCard")
     .optional({ checkFalsy: true })
     .trim()
@@ -58,15 +60,12 @@ const subContractorValidator = [
     .matches(PAN_REGEX)
     .withMessage("Invalid PAN Card format"),
 
+  body("panCardImage").optional().trim(),
+
   body("ratePerStitch")
     .optional()
     .isNumeric()
     .withMessage("Rate per stitch must be a number"),
-
-  body("plantId")
-    .optional()
-    .isNumeric()
-    .withMessage("Plant ID must be numeric"),
 
   body("note").optional().trim(),
 ];

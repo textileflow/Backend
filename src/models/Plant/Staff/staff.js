@@ -19,11 +19,6 @@ const staffSchema = new mongoose.Schema(
       required: [true, "Staff name is required"],
       trim: true,
     },
-    plantId: {
-      type: Number,
-      default: null,
-      index: true,
-    },
     type: {
       type: String,
       required: [true, "Staff type is required"],
@@ -97,6 +92,7 @@ staffSchema.methods.toJSON = function () {
   staffObj.id = staffObj.staffId;
   delete staffObj._id;
   delete staffObj.staffId;
+  delete staffObj.plantId;
   delete staffObj.__v;
   delete staffObj.isDeleted;
   delete staffObj.deletedAt;

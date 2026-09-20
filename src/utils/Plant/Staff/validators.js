@@ -8,11 +8,6 @@ const staffValidator = [
     .isLength({ min: 2, max: 100 })
     .withMessage("Staff name must be between 2 and 100 characters"),
 
-  body("plantId")
-    .optional()
-    .isNumeric()
-    .withMessage("Plant ID must be a number"),
-
   body("type")
     .trim()
     .notEmpty()

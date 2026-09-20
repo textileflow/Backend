@@ -35,14 +35,9 @@ class PlantMachineService {
   async createMachine(machineData) {
     const ownership = machineData.ownership || "In-house";
 
-    let numPlantId = null;
     let numSubContractorId = null;
 
-    if (ownership === "In-house") {
-      if (machineData.plantId) {
-        numPlantId = Number(machineData.plantId);
-      }
-    } else if (ownership === "Subcontractor") {
+    if (ownership === "Subcontractor") {
       if (!machineData.subContractorId) {
         throw new CustomError(
           "SubContractor ID is required for Subcontractor machines",
@@ -61,7 +56,6 @@ class PlantMachineService {
     const machine = await PlantMachine.create({
       machineName: machineData.machineName.trim(),
       ownership,
-      plantId: numPlantId,
       subContractorId: numSubContractorId,
       machineType: machineData.machineType || "Multi Head",
       brand: machineData.brand ? machineData.brand.trim() : "Tajima",
@@ -77,11 +71,11 @@ class PlantMachineService {
   }
 
   /**
-   * Get all Plant Machines with filtering (ownership, plantId, subContractorId)
+   * Get all Plant Machines with filtering (ownership, subContractorId)
    */
   async getAllMachines(queryParams = {}) {
     const { page, limit, skip, search, status } = getPaginationQueryParams(queryParams);
-    const { ownership, plantId, subContractorId } = queryParams;
+    const { ownership, subContractorId } = queryParams;
     const query = {};
 
     if (status) {
@@ -90,11 +84,6 @@ class PlantMachineService {
 
     if (ownership) {
       query.ownership = new RegExp(`^${ownership.trim()}$`, "i");
-    }
-
-    if (plantId) {
-      const numPlantId = Number(plantId);
-      if (!isNaN(numPlantId)) query.plantId = numPlantId;
     }
 
     if (subContractorId) {
@@ -162,18 +151,6 @@ class PlantMachineService {
     }
 
     if (updateData.ownership) machine.ownership = updateData.ownership;
-
-    if (updateData.plantId !== undefined) {
-      if (updateData.plantId === null || updateData.plantId === "") {
-        machine.plantId = null;
-      } else {
-        const numPlantId = Number(updateData.plantId);
-        if (isNaN(numPlantId)) {
-          throw new CustomError("Invalid Plant ID", 400);
-        }
-        machine.plantId = numPlantId;
-      }
-    }
 
     if (updateData.subContractorId !== undefined) {
       const numSubId = Number(updateData.subContractorId);

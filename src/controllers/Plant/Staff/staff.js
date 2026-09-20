@@ -16,7 +16,7 @@ const create = async (req, res, next) => {
 };
 
 /**
- * @desc    Get all Staff members (filter by plantId, type: Worker/Designer, etc.)
+ * @desc    Get all Staff members (filter by type: Worker/Designer, etc.)
  * @route   GET /api/plants/staff
  * @access  Private (ADMIN, MANAGER, STAFF)
  */

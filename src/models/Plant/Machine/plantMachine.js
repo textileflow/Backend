@@ -24,11 +24,6 @@ const plantMachineSchema = new mongoose.Schema(
       enum: ["In-house", "Subcontractor"],
       default: "In-house",
     },
-    plantId: {
-      type: Number,
-      default: null, // Linked if ownership is In-house
-      index: true,
-    },
     subContractorId: {
       type: Number,
       default: null, // Linked if ownership is Subcontractor
@@ -110,6 +105,7 @@ plantMachineSchema.methods.toJSON = function () {
   mObj.noOfHeads = mObj.headCount;
   delete mObj._id;
   delete mObj.machineId;
+  delete mObj.plantId;
   delete mObj.__v;
   delete mObj.isDeleted;
   delete mObj.deletedAt;

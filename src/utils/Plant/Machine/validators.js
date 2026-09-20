@@ -11,11 +11,6 @@ const plantMachineValidator = [
     .isIn(["In-house", "Subcontractor"])
     .withMessage("Ownership must be In-house or Subcontractor"),
 
-  body("plantId")
-    .optional()
-    .isNumeric()
-    .withMessage("Plant ID must be a number"),
-
   body("subContractorId")
     .optional()
     .isNumeric()

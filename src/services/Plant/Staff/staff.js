@@ -15,14 +15,6 @@ class StaffService {
    * Create a new Staff member (Worker / Designer / etc.)
    */
   async createStaff(staffData) {
-    let numPlantId = null;
-    if (staffData.plantId) {
-      numPlantId = Number(staffData.plantId);
-      if (isNaN(numPlantId)) {
-        throw new CustomError("Invalid Plant ID", 400);
-      }
-    }
-
     const salaryVal =
       staffData.salaryAmount !== undefined
         ? Number(staffData.salaryAmount)
@@ -32,7 +24,6 @@ class StaffService {
 
     const staff = await Staff.create({
       name: staffData.name.trim(),
-      plantId: numPlantId,
       type: staffData.type.trim(),
       mobile: staffData.mobile ? String(staffData.mobile).trim() : "",
       email: staffData.email ? staffData.email.trim().toLowerCase() : "",
@@ -47,20 +38,15 @@ class StaffService {
   }
 
   /**
-   * Get all Staff with filtering by plantId, staff type (Worker/Designer), search & pagination
+   * Get all Staff with filtering by staff type (Worker/Designer), search & pagination
    */
   async getAllStaff(queryParams = {}) {
     const { page, limit, skip, search, status } = getPaginationQueryParams(queryParams);
-    const { plantId, type } = queryParams;
+    const { type } = queryParams;
     const query = {};
 
     if (status) {
       query.status = new RegExp(`^${status}$`, "i");
-    }
-
-    if (plantId) {
-      const numPlantId = Number(plantId);
-      if (!isNaN(numPlantId)) query.plantId = numPlantId;
     }
 
     if (type) {
@@ -124,18 +110,6 @@ class StaffService {
     const staff = await Staff.findOne({ staffId: numericId });
     if (!staff) {
       throw new CustomError("Staff member not found", 404);
-    }
-
-    if (updateData.plantId !== undefined) {
-      if (updateData.plantId === null || updateData.plantId === "") {
-        staff.plantId = null;
-      } else {
-        const numPlantId = Number(updateData.plantId);
-        if (isNaN(numPlantId)) {
-          throw new CustomError("Invalid Plant ID", 400);
-        }
-        staff.plantId = numPlantId;
-      }
     }
 
     if (updateData.name) staff.name = updateData.name.trim();

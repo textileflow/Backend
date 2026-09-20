@@ -2,6 +2,7 @@ const express = require("express");
 const router = express.Router();
 const subContractorController = require("../../../controllers/Plant/SubContractor/subContractor");
 const { protect, authorizeRoles } = require("../../../middleware/Auth/auth");
+const { uploadVendorFields } = require("../../../middleware/Common/upload");
 const validate = require("../../../middleware/Common/validate");
 const {
   subContractorValidator,
@@ -15,6 +16,7 @@ router
   .route("/")
   .post(
     authorizeRoles("admin", "manager"),
+    uploadVendorFields,
     subContractorValidator,
     validate,
     subContractorController.create
@@ -45,7 +47,13 @@ router
     authorizeRoles("admin", "manager", "staff"),
     subContractorController.getById
   )
-  .put(authorizeRoles("admin", "manager"), subContractorController.update)
+  .put(
+    authorizeRoles("admin", "manager"),
+    uploadVendorFields,
+    subContractorValidator,
+    validate,
+    subContractorController.update
+  )
   .delete(authorizeRoles("admin"), subContractorController.remove);
 
 module.exports = router;

@@ -1,6 +1,7 @@
 const SubContractor = require("../../../models/Plant/SubContractor/subContractor");
 const PlantMachine = require("../../../models/Plant/Machine/plantMachine");
 const CustomError = require("../../../utils/Common/customError");
+const { uploadToCloudinary } = require("../../../config/cloudinary");
 const {
   getPaginationQueryParams,
   buildPaginationData,
@@ -34,13 +35,24 @@ class SubContractorService {
   /**
    * Create a new SubContractor
    */
-  async createSubContractor(subContractorData) {
-    let numPlantId = null;
-    if (subContractorData.plantId) {
-      numPlantId = Number(subContractorData.plantId);
-      if (isNaN(numPlantId)) {
-        throw new CustomError("Invalid Plant ID", 400);
-      }
+  async createSubContractor(subContractorData, files = {}) {
+    let gstCertUrl = subContractorData.gstCertificate || "";
+    let panImgUrl = subContractorData.panCardImage || "";
+
+    if (files && files.gstCertificate && files.gstCertificate[0]) {
+      const result = await uploadToCloudinary(
+        files.gstCertificate[0].buffer,
+        "upload-single"
+      );
+      gstCertUrl = result.path;
+    }
+
+    if (files && files.panCardImage && files.panCardImage[0]) {
+      const result = await uploadToCloudinary(
+        files.panCardImage[0].buffer,
+        "upload-single"
+      );
+      panImgUrl = result.path;
     }
 
     const subContractor = await SubContractor.create({
@@ -52,16 +64,17 @@ class SubContractorService {
       gstNumber: subContractorData.gstNumber
         ? subContractorData.gstNumber.trim().toUpperCase()
         : "",
+      gstCertificate: gstCertUrl,
       panCard: subContractorData.panCard
         ? subContractorData.panCard.trim().toUpperCase()
         : "",
+      panCardImage: panImgUrl,
       ratePerStitch: subContractorData.ratePerStitch
         ? Number(subContractorData.ratePerStitch)
         : 0,
       paymentTerms: subContractorData.paymentTerms
         ? subContractorData.paymentTerms.trim()
         : "",
-      plantId: numPlantId,
       note: subContractorData.note ? subContractorData.note.trim() : "",
     });
 
@@ -73,16 +86,10 @@ class SubContractorService {
    */
   async getAllSubContractors(queryParams = {}) {
     const { page, limit, skip, search, status } = getPaginationQueryParams(queryParams);
-    const { plantId } = queryParams;
     const query = {};
 
     if (status) {
       query.status = new RegExp(`^${status}$`, "i");
-    }
-
-    if (plantId) {
-      const numPlantId = Number(plantId);
-      if (!isNaN(numPlantId)) query.plantId = numPlantId;
     }
 
     if (search) {
@@ -136,7 +143,7 @@ class SubContractorService {
   /**
    * Update SubContractor
    */
-  async updateSubContractor(id, updateData) {
+  async updateSubContractor(id, updateData, files = {}) {
     const numericId = Number(id);
     if (isNaN(numericId)) {
       throw new CustomError("Invalid SubContractor ID", 400);
@@ -147,18 +154,6 @@ class SubContractorService {
     });
     if (!subContractor) {
       throw new CustomError("SubContractor not found", 404);
-    }
-
-    if (updateData.plantId !== undefined) {
-      if (updateData.plantId === null || updateData.plantId === "") {
-        subContractor.plantId = null;
-      } else {
-        const numPlantId = Number(updateData.plantId);
-        if (isNaN(numPlantId)) {
-          throw new CustomError("Invalid Plant ID", 400);
-        }
-        subContractor.plantId = numPlantId;
-      }
     }
 
     if (updateData.companyName)
@@ -181,6 +176,27 @@ class SubContractorService {
       subContractor.paymentTerms = updateData.paymentTerms ? updateData.paymentTerms.trim() : "";
     if (updateData.note !== undefined)
       subContractor.note = updateData.note ? updateData.note.trim() : "";
+
+    if (updateData.gstCertificate !== undefined)
+      subContractor.gstCertificate = updateData.gstCertificate.trim();
+    if (updateData.panCardImage !== undefined)
+      subContractor.panCardImage = updateData.panCardImage.trim();
+
+    if (files && files.gstCertificate && files.gstCertificate[0]) {
+      const result = await uploadToCloudinary(
+        files.gstCertificate[0].buffer,
+        "upload-single"
+      );
+      subContractor.gstCertificate = result.path;
+    }
+
+    if (files && files.panCardImage && files.panCardImage[0]) {
+      const result = await uploadToCloudinary(
+        files.panCardImage[0].buffer,
+        "upload-single"
+      );
+      subContractor.panCardImage = result.path;
+    }
 
     await subContractor.save();
     return await formatSubContractor(subContractor);

@@ -8,7 +8,10 @@ const { sendSuccess } = require("../../../utils/Common/apiResponse");
  */
 const create = async (req, res, next) => {
   try {
-    const subContractor = await subContractorService.createSubContractor(req.body);
+    const subContractor = await subContractorService.createSubContractor(
+      req.body,
+      req.files
+    );
     return sendSuccess(
       res,
       201,
@@ -71,7 +74,8 @@ const update = async (req, res, next) => {
   try {
     const subContractor = await subContractorService.updateSubContractor(
       req.params.id,
-      req.body
+      req.body,
+      req.files
     );
     return sendSuccess(
       res,
