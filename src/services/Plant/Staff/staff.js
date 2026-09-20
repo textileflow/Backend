@@ -65,7 +65,7 @@ class StaffService {
 
     const totalCount = await Staff.countDocuments(query);
     const staffList = await Staff.find(query)
-      .sort({ staffId: 1 })
+      .sort({ staffId: -1 })
       .skip(skip)
       .limit(limit);
 

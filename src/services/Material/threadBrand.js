@@ -47,7 +47,7 @@ class ThreadBrandService {
   }
 
   async getAllBrands() {
-    const brands = await ThreadBrand.find().sort({ brandId: 1 });
+    const brands = await ThreadBrand.find().sort({ brandId: -1 });
     return await Promise.all(brands.map((b) => formatBrandRecord(b)));
   }
 }

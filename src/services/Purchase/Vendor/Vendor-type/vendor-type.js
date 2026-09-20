@@ -45,7 +45,7 @@ class VendorTypeService {
 
     const totalCount = await VendorType.countDocuments(query);
     const vendorTypes = await VendorType.find(query)
-      .sort({ vendorTypeId: 1 })
+      .sort({ vendorTypeId: -1 })
       .skip(skip)
       .limit(limit);
 

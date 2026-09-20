@@ -197,7 +197,7 @@ class MerchantService {
 
     const totalCount = await Merchant.countDocuments(query);
     const merchants = await Merchant.find(query)
-      .sort({ merchantId: 1 })
+      .sort({ merchantId: -1 })
       .skip(skip)
       .limit(limit);
 

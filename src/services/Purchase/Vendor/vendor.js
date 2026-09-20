@@ -188,7 +188,7 @@ class VendorService {
 
     const totalCount = await Vendor.countDocuments(query);
     const vendors = await Vendor.find(query)
-      .sort({ vendorId: 1 })
+      .sort({ vendorId: -1 })
       .skip(skip)
       .limit(limit);
     const formattedVendors = await Promise.all(

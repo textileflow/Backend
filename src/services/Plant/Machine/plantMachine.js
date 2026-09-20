@@ -103,7 +103,7 @@ class PlantMachineService {
 
     const totalCount = await PlantMachine.countDocuments(query);
     const machines = await PlantMachine.find(query)
-      .sort({ machineId: 1 })
+      .sort({ machineId: -1 })
       .skip(skip)
       .limit(limit);
 

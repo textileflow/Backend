@@ -105,7 +105,7 @@ class SubContractorService {
 
     const totalCount = await SubContractor.countDocuments(query);
     const subContractors = await SubContractor.find(query)
-      .sort({ subContractorId: 1 })
+      .sort({ subContractorId: -1 })
       .skip(skip)
       .limit(limit);
 

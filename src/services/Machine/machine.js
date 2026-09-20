@@ -94,7 +94,7 @@ class MachineService {
 
     const totalCount = await Machine.countDocuments(query);
     const machines = await Machine.find(query)
-      .sort({ machineId: 1 })
+      .sort({ machineId: -1 })
       .skip(skip)
       .limit(limit);
 

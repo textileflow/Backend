@@ -13,7 +13,7 @@ class UnitService {
   }
 
   async getAllUnits() {
-    return await Unit.find().sort({ unitId: 1 });
+    return await Unit.find().sort({ unitId: -1 });
   }
 
   async getUnitById(id) {

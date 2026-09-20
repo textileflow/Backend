@@ -70,7 +70,7 @@ class MaterialService {
 
     const totalCount = await Material.countDocuments(query);
     const materials = await Material.find(query)
-      .sort({ materialId: 1 })
+      .sort({ materialId: -1 })
       .skip(skip)
       .limit(limit);
 

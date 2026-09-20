@@ -13,7 +13,7 @@ class MachineTypeService {
   }
 
   async getAllMachineTypes() {
-    return await MachineType.find().sort({ machineTypeId: 1 });
+    return await MachineType.find().sort({ machineTypeId: -1 });
   }
 }
 

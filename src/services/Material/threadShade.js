@@ -133,7 +133,7 @@ class ThreadShadeService {
 
     const totalCount = await ThreadShade.countDocuments(query);
     const shades = await ThreadShade.find(query)
-      .sort({ shadeId: 1 })
+      .sort({ shadeId: -1 })
       .skip(skip)
       .limit(limit);
 

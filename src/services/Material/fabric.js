@@ -77,7 +77,7 @@ class FabricService {
 
     const totalCount = await Fabric.countDocuments(query);
     const fabrics = await Fabric.find(query)
-      .sort({ fabricId: 1 })
+      .sort({ fabricId: -1 })
       .skip(skip)
       .limit(limit);
 

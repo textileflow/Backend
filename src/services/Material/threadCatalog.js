@@ -72,7 +72,7 @@ class ThreadCatalogService {
   }
 
   async getAllCatalogs() {
-    const catalogs = await ThreadCatalog.find().sort({ catalogId: 1 });
+    const catalogs = await ThreadCatalog.find().sort({ catalogId: -1 });
     return await Promise.all(catalogs.map((c) => formatCatalogRecord(c)));
   }
 

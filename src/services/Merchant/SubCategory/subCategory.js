@@ -96,7 +96,7 @@ class SubCategoryService {
 
     const totalCount = await SubCategory.countDocuments(query);
     const subCategories = await SubCategory.find(query)
-      .sort({ subCategoryId: 1 })
+      .sort({ subCategoryId: -1 })
       .skip(skip)
       .limit(limit);
 

@@ -78,7 +78,7 @@ class ThreadService {
 
     const totalCount = await Thread.countDocuments(query);
     const threads = await Thread.find(query)
-      .sort({ threadId: 1 })
+      .sort({ threadId: -1 })
       .skip(skip)
       .limit(limit);
 

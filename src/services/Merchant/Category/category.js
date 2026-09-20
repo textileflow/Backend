@@ -41,7 +41,7 @@ class CategoryService {
 
     const totalCount = await Category.countDocuments(query);
     const categories = await Category.find(query)
-      .sort({ categoryId: 1 })
+      .sort({ categoryId: -1 })
       .skip(skip)
       .limit(limit);
 
