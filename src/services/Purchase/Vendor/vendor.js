@@ -1,6 +1,5 @@
 const Vendor = require("../../../models/Purchase/Vendor/vendor");
 const VendorType = require("../../../models/Purchase/Vendor/Vendor-type/vendor-type");
-const ThreadBrand = require("../../../models/Material/threadBrand");
 const CustomError = require("../../../utils/Common/customError");
 const { uploadToCloudinary } = require("../../../config/cloudinary");
 const {
@@ -323,18 +322,6 @@ class VendorService {
 
     const vendor = await Vendor.findOne({ vendorId: numericId });
     if (!vendor) throw new CustomError("Vendor not found", 404);
-
-    const brandCount = await ThreadBrand.countDocuments({
-      vendorId: numericId,
-    });
-
-    if (brandCount > 0) {
-      await vendor.softDelete();
-      throw new CustomError(
-        `Cannot delete vendor because it is referenced in ${brandCount} Thread Brands/Catalog items. Vendor status has been updated to Inactive.`,
-        400,
-      );
-    }
 
     await vendor.softDelete();
     return { id: numericId };

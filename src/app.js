@@ -10,16 +10,6 @@ const merchantRoutes = require("./routes/Merchant/merchant");
 const vendorRoutes = require("./routes/Purchase/Vendor/vendor");
 const vendorTypeRoutes = require("./routes/Purchase/Vendor/Vendor-type/vendor-type");
 const purchaseOrderRoutes = require("./routes/Purchase/Purchase-order/purchase-order");
-const unitRoutes = require("./routes/Master/unit");
-const machineTypeRoutes = require("./routes/Master/machineType");
-const threadBrandRoutes = require("./routes/Material/threadBrand");
-const threadCatalogRoutes = require("./routes/Material/threadCatalog");
-const threadShadeRoutes = require("./routes/Material/threadShade");
-const threadRoutes = require("./routes/Material/thread");
-const fabricRoutes = require("./routes/Material/fabric");
-const materialRoutes = require("./routes/Material/material");
-const machineRoutes = require("./routes/Machine/machine");
-const designRoutes = require("./routes/Design/design");
 const uploadRoutes = require("./routes/Upload/upload");
 const {
   notFoundHandler,
@@ -88,16 +78,6 @@ app.use("/api/vendor-types", vendorTypeRoutes);
 app.use("/api/purchase/vendors", vendorRoutes);
 app.use("/api/purchase/orders", purchaseOrderRoutes);
 app.use("/api/purchase/purchase-orders", purchaseOrderRoutes);
-app.use("/api/units", unitRoutes);
-app.use("/api/machine-types", machineTypeRoutes);
-app.use("/api/thread-brands", threadBrandRoutes);
-app.use("/api/thread-catalogs", threadCatalogRoutes);
-app.use("/api/thread-shades", threadShadeRoutes);
-app.use("/api/threads", threadRoutes);
-app.use("/api/fabrics", fabricRoutes);
-app.use("/api/materials", materialRoutes);
-app.use("/api/machines", machineRoutes);
-app.use("/api/designs", designRoutes);
 app.use("/api/upload", uploadRoutes);
 
 // Plant Module Routes

@@ -5,7 +5,6 @@ const app = require("../src/app");
 const User = require("../src/models/Auth/auth");
 const Vendor = require("../src/models/Purchase/Vendor/vendor");
 const VendorType = require("../src/models/Purchase/Vendor/Vendor-type/vendor-type");
-const ThreadBrand = require("../src/models/Material/threadBrand");
 const Counter = require("../src/models/Common/counter");
 
 let mongoServer;
@@ -32,7 +31,6 @@ afterAll(async () => {
 beforeEach(async () => {
   await User.deleteMany({});
   await Vendor.deleteMany({});
-  await ThreadBrand.deleteMany({});
   await Counter.deleteMany({});
 
   const adminRes = await request(app).post("/api/auth/register").send({
@@ -251,36 +249,29 @@ describe("Vendor Master API Comprehensive Tests (/api/purchase/vendors)", () => 
     expect(patchRes.body.data.status).toBe("Inactive");
   });
 
-  it("should prevent deletion when Vendor is referenced by Thread Brands", async () => {
+  it("should soft delete Vendor successfully", async () => {
     const createRes = await request(app)
       .post("/api/purchase/vendors")
       .set("Authorization", `Bearer ${adminToken}`)
       .send({
-        companyName: "Referenced Vendor",
-        personName: "Referenced Person",
+        companyName: "Vendor to Delete",
+        personName: "Delete Person",
         mobile: "9888877777",
         paymentTerm: "30 Days",
       });
 
     const vendorId = createRes.body.data.id;
 
-    // Link a Thread Brand to this Vendor
-    await ThreadBrand.create({
-      brandName: "Royal Brand",
-      vendorId: vendorId,
-    });
-
     const deleteRes = await request(app)
       .delete(`/api/purchase/vendors/${vendorId}`)
       .set("Authorization", `Bearer ${adminToken}`);
 
-    expect(deleteRes.statusCode).toEqual(400);
-    expect(deleteRes.body.message).toMatch(/referenced/i);
+    expect(deleteRes.statusCode).toEqual(200);
+    expect(deleteRes.body.success).toBe(true);
 
     const checkVendor = await Vendor.findOne({ vendorId })
       .select("+isDeleted")
       .setOptions({ includeDeleted: true });
-    expect(checkVendor.status).toBe("Inactive");
     expect(checkVendor.isDeleted).toBe(true);
 
     const getRes = await request(app)
