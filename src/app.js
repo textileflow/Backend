@@ -63,6 +63,8 @@ app.get("/api/health", (req, res) => {
 const plantStaffRoutes = require("./routes/Plant/Staff/staff");
 const plantSubContractorRoutes = require("./routes/Plant/SubContractor/subContractor");
 const plantMachineRoutes = require("./routes/Plant/Machine/plantMachine");
+const designRoutes = require("./routes/Design/design");
+const designCostingRoutes = require("./routes/Design/Costing/costing");
 
 // 7. Mount Module Routes
 app.use("/api/auth", authRoutes);
@@ -79,6 +81,12 @@ app.use("/api/purchase/vendors", vendorRoutes);
 app.use("/api/purchase/orders", purchaseOrderRoutes);
 app.use("/api/purchase/purchase-orders", purchaseOrderRoutes);
 app.use("/api/upload", uploadRoutes);
+
+// Design Module Routes
+app.use("/api/designs", designRoutes);
+app.use("/designs", designRoutes);
+app.use("/api/design-costings", designCostingRoutes);
+app.use("/design-costings", designCostingRoutes);
 
 // Plant Module Routes
 app.use("/api/plants/staff", plantStaffRoutes);

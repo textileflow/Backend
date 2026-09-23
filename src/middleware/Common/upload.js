@@ -105,10 +105,34 @@ const uploadVendorFields = (req, res, next) => {
   });
 };
 
+// Design module upload middleware (fields: image [1], file [1])
+const uploadDesignModuleFields = (req, res, next) => {
+  upload.fields([
+    { name: "image", maxCount: 1 },
+    { name: "file", maxCount: 1 },
+  ])(req, res, (err) => {
+    if (err instanceof multer.MulterError) {
+      if (err.code === "LIMIT_FILE_SIZE") {
+        return next(
+          new CustomError(
+            "One or more uploaded files exceed the 4 MB limit.",
+            400
+          )
+        );
+      }
+      return next(new CustomError(err.message, 400));
+    } else if (err) {
+      return next(err);
+    }
+    next();
+  });
+};
+
 module.exports = {
   upload,
   uploadSingleFile,
   uploadMultipleFiles,
   uploadDesignFields,
   uploadVendorFields,
+  uploadDesignModuleFields,
 };

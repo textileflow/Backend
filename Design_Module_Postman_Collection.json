@@ -1,0 +1,318 @@
+{
+  "info": {
+    "_postman_id": "c9876543-design-costing-collection-v1",
+    "name": "TEXTILEFLOW - Design & Design Costing Module",
+    "description": "Complete Postman Collection for TEXTILEFLOW Embroidery ERP Design Master and Design Costing modules.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "http://localhost:5000",
+      "type": "string"
+    },
+    {
+      "key": "token",
+      "value": "YOUR_JWT_TOKEN_HERE",
+      "type": "string"
+    }
+  ],
+  "auth": {
+    "type": "bearer",
+    "bearer": [
+      {
+        "key": "token",
+        "value": "{{token}}",
+        "type": "string"
+      }
+    ]
+  },
+  "item": [
+    {
+      "name": "1. Design Master",
+      "item": [
+        {
+          "name": "Create Design (JSON format)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"designName\": \"Floral Border Design\",\n  \"designCode\": \"EMB-000001\",\n  \"image\": \"https://res.cloudinary.com/demo/image/upload/sample.jpg\",\n  \"stitch\": 45000,\n  \"area\": 120.5,\n  \"needle\": 9,\n  \"type\": \"Border\",\n  \"file\": \"https://res.cloudinary.com/demo/raw/upload/sample.dst\",\n  \"status\": \"Active\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/designs",
+              "host": ["{{base_url}}"],
+              "path": ["api", "designs"]
+            }
+          }
+        },
+        {
+          "name": "Create Design (Multipart Form Upload)",
+          "request": {
+            "method": "POST",
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "designName",
+                  "value": "Royal Paisley Motif",
+                  "type": "text"
+                },
+                {
+                  "key": "designCode",
+                  "value": "EMB-000002",
+                  "type": "text"
+                },
+                {
+                  "key": "stitch",
+                  "value": "25000",
+                  "type": "text"
+                },
+                {
+                  "key": "area",
+                  "value": "400",
+                  "type": "text"
+                },
+                {
+                  "key": "needle",
+                  "value": "12",
+                  "type": "text"
+                },
+                {
+                  "key": "type",
+                  "value": "Motif",
+                  "type": "text"
+                },
+                {
+                  "key": "status",
+                  "value": "Active",
+                  "type": "text"
+                },
+                {
+                  "key": "image",
+                  "type": "file",
+                  "src": []
+                },
+                {
+                  "key": "file",
+                  "type": "file",
+                  "src": []
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{base_url}}/api/designs",
+              "host": ["{{base_url}}"],
+              "path": ["api", "designs"]
+            }
+          }
+        },
+        {
+          "name": "Get All Designs",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/api/designs?page=1&limit=10&search=&status=Active",
+              "host": ["{{base_url}}"],
+              "path": ["api", "designs"],
+              "query": [
+                { "key": "page", "value": "1" },
+                { "key": "limit", "value": "10" },
+                { "key": "search", "value": "" },
+                { "key": "status", "value": "Active" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get Design By ID",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/api/designs/1",
+              "host": ["{{base_url}}"],
+              "path": ["api", "designs", "1"]
+            }
+          }
+        },
+        {
+          "name": "Update Design",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"designName\": \"Floral Border Design - Premium\",\n  \"stitch\": 48000,\n  \"needle\": 12\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/designs/1",
+              "host": ["{{base_url}}"],
+              "path": ["api", "designs", "1"]
+            }
+          }
+        },
+        {
+          "name": "Update Design Status",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"Inactive\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/designs/1/status",
+              "host": ["{{base_url}}"],
+              "path": ["api", "designs", "1", "status"]
+            }
+          }
+        },
+        {
+          "name": "Delete Design",
+          "request": {
+            "method": "DELETE",
+            "url": {
+              "raw": "{{base_url}}/api/designs/1",
+              "host": ["{{base_url}}"],
+              "path": ["api", "designs", "1"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "2. Design Costing",
+      "item": [
+        {
+          "name": "Create Design Costing",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"designId\": 1,\n  \"pricePer1000\": 8,\n  \"meterConversionFactor\": 400,\n  \"headAdjustmentEnabled\": true,\n  \"headAdjustmentFactor\": 1.5,\n  \"status\": \"Active\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/design-costings",
+              "host": ["{{base_url}}"],
+              "path": ["api", "design-costings"]
+            }
+          }
+        },
+        {
+          "name": "Get All Design Costings",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/api/design-costings?page=1&limit=10&search=&status=Active",
+              "host": ["{{base_url}}"],
+              "path": ["api", "design-costings"],
+              "query": [
+                { "key": "page", "value": "1" },
+                { "key": "limit", "value": "10" },
+                { "key": "search", "value": "" },
+                { "key": "status", "value": "Active" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get Design Costing By Design ID",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/api/design-costings/design/1",
+              "host": ["{{base_url}}"],
+              "path": ["api", "design-costings", "design", "1"]
+            }
+          }
+        },
+        {
+          "name": "Get Design Costing By Costing ID",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/api/design-costings/1",
+              "host": ["{{base_url}}"],
+              "path": ["api", "design-costings", "1"]
+            }
+          }
+        },
+        {
+          "name": "Update Design Costing",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"pricePer1000\": 10,\n  \"meterConversionFactor\": 400,\n  \"headAdjustmentEnabled\": true,\n  \"headAdjustmentFactor\": 1.5\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/design-costings/1",
+              "host": ["{{base_url}}"],
+              "path": ["api", "design-costings", "1"]
+            }
+          }
+        },
+        {
+          "name": "Update Design Costing Status",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"Inactive\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/design-costings/1/status",
+              "host": ["{{base_url}}"],
+              "path": ["api", "design-costings", "1", "status"]
+            }
+          }
+        },
+        {
+          "name": "Delete Design Costing",
+          "request": {
+            "method": "DELETE",
+            "url": {
+              "raw": "{{base_url}}/api/design-costings/1",
+              "host": ["{{base_url}}"],
+              "path": ["api", "design-costings", "1"]
+            }
+          }
+        }
+      ]
+    }
+  ]
+}
