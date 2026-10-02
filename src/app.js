@@ -65,6 +65,9 @@ const plantSubContractorRoutes = require("./routes/Plant/SubContractor/subContra
 const plantMachineRoutes = require("./routes/Plant/Machine/plantMachine");
 const designRoutes = require("./routes/Design/design");
 const designCostingRoutes = require("./routes/Design/Costing/costing");
+const inventoryRoutes = require("./routes/Inventory/inventory");
+const productionRoutes = require("./routes/Production/production");
+const dispatchRoutes = require("./routes/Dispatch/dispatch");
 
 // 7. Mount Module Routes
 app.use("/api/auth", authRoutes);
@@ -94,6 +97,11 @@ app.use("/api/plants/subcontractors", plantSubContractorRoutes);
 app.use("/api/plants/machines", plantMachineRoutes);
 app.use("/api/staff", plantStaffRoutes);
 app.use("/api/subcontractors", plantSubContractorRoutes);
+
+// ERP Operations Routes
+app.use("/api/inventory", inventoryRoutes);
+app.use("/api/production", productionRoutes);
+app.use("/api/dispatch", dispatchRoutes);
 
 // 8. Handle 404 routes
 app.use(notFoundHandler);
